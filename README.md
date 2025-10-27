@@ -4,8 +4,6 @@
 
 A complete weather monitoring application that demonstrates advanced CloudMouse SDK features including service architecture, event-driven communication, and pixel-perfect LVGL UI design.
 
-![Weather Station Demo](docs/weather-demo.jpg)
-
 ## 📋 Overview
 
 This example showcases a production-ready weather station application built on the CloudMouse SDK. It features:
@@ -117,7 +115,7 @@ Install the following libraries via Arduino Library Manager:
 Edit the main `.ino` file to set your location coordinates:
 
 ```cpp
-// Change these to your location (example: Cattolica, Italy)
+// Change these to your location (example: east coast center Italy)
 WeatherService weatherService(43.9395805, 12.7710328);
 ```
 
@@ -248,13 +246,13 @@ Font Awesome fonts were converted using the [LVGL Font Converter](https://lvgl.i
 ```
 ┌─────────────────────────────────────────────┐
 │  Date & Time         Current Weather        │
-│  Monday              [☀️]                    │
+│  Monday              [☀️]                   │
 │  October 27, 2025    24.5°                  │
 │  14:30:45            Clear Sky              │
 │                      💧 65%  💨 12 km/h     │
 ├─────────────────────────────────────────────┤
 │  [Day 1]        [Day 2]        [Day 3]      │
-│  ☀️              🌤️             ☁️           │
+│  ☀️              🌤️             ☁️          │
 │  28° / 18°      26° / 17°      22° / 15°    │
 │  28 Tue         29 Wed         30 Thu       │
 └─────────────────────────────────────────────┘
@@ -340,7 +338,6 @@ lv_color_hex(0xFFAA00)  // Icon color
 - Install all required libraries
 - Check library versions (LVGL 9.x, ArduinoJson 7.x)
 - Ensure Font Awesome files are in project root
-- Verify `PreferencesManager.cpp` exists in `lib/prefs/`
 
 ## 📊 Memory Usage
 
@@ -354,6 +351,7 @@ The dual-core architecture keeps UI rendering smooth at 30Hz while background ta
 
 ## 🔗 Useful Links
 
+- [CloudMouse website](https://cloudmouse.co)
 - [CloudMouse SDK](https://github.com/tibonilab/cloudmouse-boilerplate)
 - [LVGL Documentation](https://docs.lvgl.io/)
 - [Open-Meteo API](https://open-meteo.com/)
