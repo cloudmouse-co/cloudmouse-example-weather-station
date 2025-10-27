@@ -7,13 +7,16 @@
 
 #include "./NTPManager.h"
 
+const long ITALIAN_GMT_OFFSET_SEC = 3600;
+const int ITALIAN_DST_OFFSET_SEC = 0;
+
 namespace CloudMouse::Utils
 {
 
     // Static member initialization
     bool NTPManager::timeInitialized = false;
     long NTPManager::gmtOffset_sec = 0;     // Default to UTC
-    int NTPManager::daylightOffset_sec = 1; // Default no DST
+    int NTPManager::daylightOffset_sec = 0; // Default no DST
 
     // Default NTP servers (reliable global servers)
     const char *NTPManager::DEFAULT_NTP_SERVER1 = "pool.ntp.org";
@@ -31,8 +34,8 @@ namespace CloudMouse::Utils
 
     void NTPManager::init()
     {
-        // Initialize with UTC timezone (no offset)
-        init(0, 0);
+        // Initialize with Europe/Rome timezone (GMT+1/GMT+2)
+        init(ITALIAN_GMT_OFFSET_SEC, ITALIAN_DST_OFFSET_SEC);
     }
 
     void NTPManager::init(long gmtOffsetSec, int dstOffsetSec)

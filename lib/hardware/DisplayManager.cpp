@@ -109,6 +109,8 @@ namespace CloudMouse::Hardware
 
     void DisplayManager::update()
     {
+        // Process all pending events from EventBus (non-blocking)
+        // Events drive screen state changes and UI updates
         Event event;
         while (EventBus::instance().receiveFromMain(event, 0))
         {

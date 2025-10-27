@@ -213,9 +213,9 @@ void WeatherUI::createForecastDay(lv_obj_t* container, const DayForecast& foreca
     // Weather Icon
     lv_obj_t* icon = lv_label_create(container);
     lv_obj_set_style_text_font(icon, &font_awesome_solid_24, 0);
-    lv_obj_set_style_text_color(icon, lv_color_hex(0xFFAA00), 0);
+    lv_obj_set_style_text_color(icon, lv_color_hex(0x999999), 0);
     lv_label_set_text(icon, getWeatherIconFA(forecast.weatherCode));
-    lv_obj_align(icon, LV_ALIGN_TOP_LEFT, 10, 8);
+    lv_obj_align(icon, LV_ALIGN_TOP_MID, 0, -2);
     
     // Temperature MAX (white)
     lv_obj_t* tempMax = lv_label_create(container);

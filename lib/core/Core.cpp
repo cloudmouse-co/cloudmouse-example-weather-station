@@ -225,7 +225,7 @@ namespace CloudMouse
             Event helloEvent(EventType::DISPLAY_WAKE_UP);
             EventBus::instance().sendToUI(helloEvent);
         }
-
+        
         setState(SystemState::READY);
       }
       break;
@@ -320,8 +320,6 @@ namespace CloudMouse
         break;
 
       case EventType::ENCODER_CLICK:
-        handleWeatherUpdate();
-
         handleEncoderClick(event);
         break;
 
@@ -382,51 +380,6 @@ namespace CloudMouse
 
     // Forward to UI system
     EventBus::instance().sendToUI(event);
-  }
-
-  void Core::handleWeatherUpdate()
-  {
-      if (!weatherService) return;
-      
-      const WeatherData& weather = weatherService->getCurrentWeather();
-      const DayForecast* forecast = weatherService->getForecast();
-      
-      if (!weather.isValid) {
-          Serial.println("⚠️ Weather data not valid yet");
-          return;
-      }
-      
-      // Send current weather to UI
-      Event weatherEvent(EventType::WEATHER_DATA_CURRENT);
-      
-      // Pack data into string: "temp|humidity|windSpeed|weatherCode|condition"
-      String data = String(weather.temperature, 1) + "|" +
-                    String(weather.humidity) + "|" +
-                    String(weather.windSpeed, 1) + "|" +
-                    String(weather.weatherCode) + "|" +
-                    weather.condition;
-      
-      weatherEvent.setStringData(data.c_str());
-      EventBus::instance().sendToUI(weatherEvent);
-      
-      // Send forecast data (3 days)
-      if (weatherService->isForecastValid()) {
-          for (int i = 0; i < 3; i++) {
-              Event forecastEvent(EventType::WEATHER_DATA_FORECAST);
-              forecastEvent.value = i; // Day index
-              
-              // Pack: "date|tempMax|tempMin|weatherCode"
-              String forecastData = forecast[i].date + "|" +
-                                    String(forecast[i].tempMax, 1) + "|" +
-                                    String(forecast[i].tempMin, 1) + "|" +
-                                    String(forecast[i].weatherCode);
-              
-              forecastEvent.setStringData(forecastData.c_str());
-              EventBus::instance().sendToUI(forecastEvent);
-          }
-      }
-      
-      Serial.println("📤 Weather data sent to UI");
   }
 
   // ============================================================================
