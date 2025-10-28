@@ -4,6 +4,8 @@
 
 A complete weather monitoring application that demonstrates advanced CloudMouse SDK features including service architecture, event-driven communication, and pixel-perfect LVGL UI design.
 
+![UI Demo](assets/ui-demo.jpg)
+
 ## 📋 Overview
 
 This example showcases a production-ready weather station application built on the CloudMouse SDK. It features:
