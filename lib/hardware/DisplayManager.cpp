@@ -128,6 +128,42 @@ namespace CloudMouse::Hardware
         }
 
         lv_timer_handler();
+        handleDimmer();
+    }
+
+    void DisplayManager::handleDimmer() {
+      const unsigned long IDLE_TIMEOUT_MS = 10000; // 10 secondi di inattività
+
+      // Verify IDLE mode
+      if (millis() - lastInteractionTime > IDLE_TIMEOUT_MS) {
+          
+        // check for next step delay
+        if (millis() - lastFadeTime > FADE_OUT_STEP_DELAY_MS) {
+                      
+          // check if target is reached out
+          if (currentBrightness > BRIGHTNESS_IDLE_TARGET) {
+              
+            // calculate new brightness using fade out step
+            currentBrightness = currentBrightness - FADE_OUT_STEP_VALUE;
+            
+            if (currentBrightness < BRIGHTNESS_IDLE_TARGET) {
+                currentBrightness = BRIGHTNESS_IDLE_TARGET;
+            }
+            
+            // set new brightness
+            display.setBrightness(currentBrightness);
+            
+            // and update fading timer
+            lastFadeTime = millis();
+          }
+        }
+      }
+    }
+
+    void DisplayManager::wakeUp() {
+      lastInteractionTime = millis();
+      currentBrightness = BRIGHTNESS_UP_TARGET;
+      display.setBrightness(BRIGHTNESS_UP_TARGET);
     }
 
     // ============================================================================
@@ -171,8 +207,7 @@ namespace CloudMouse::Hardware
         switch (event.type)
         {
         case EventType::DISPLAY_WAKE_UP:
-            // currentScreen = Screen::HELLO_WORLD;
-            // lv_disp_load_scr(screen_hello_world);
+            wakeUp();
             break;
 
         case EventType::DISPLAY_WIFI_CONNECTING:
@@ -181,8 +216,7 @@ namespace CloudMouse::Hardware
             break;
 
         case EventType::ENCODER_ROTATION:
-            Serial.println(event.value);
-
+            wakeUp();
             encoder_diff += event.value; 
             if (currentScreen == Screen::HELLO_WORLD) {
                 lv_label_set_text_fmt(label_hello_status, "Encoder rotation: %s", event.value > 0 ? "RIGHT" : "LEFT");
@@ -190,6 +224,7 @@ namespace CloudMouse::Hardware
             break;
 
         case EventType::ENCODER_CLICK:
+            wakeUp();
             encoder_state = LV_INDEV_STATE_PRESSED;
             if (currentScreen == Screen::HELLO_WORLD) {
                 lv_label_set_text(label_hello_status, "Click!");
@@ -197,6 +232,7 @@ namespace CloudMouse::Hardware
             break;
 
         case EventType::ENCODER_LONG_PRESS:
+            wakeUp();
             encoder_state = LV_INDEV_STATE_PRESSED; 
             if (currentScreen == Screen::HELLO_WORLD) {
                 lv_label_set_text(label_hello_status, "Long Press!");
@@ -204,6 +240,7 @@ namespace CloudMouse::Hardware
             break;
 
         case EventType::DISPLAY_WIFI_AP_MODE:
+            wakeUp();
             currentScreen = Screen::WIFI_AP_MODE;
             { 
                 String apSSID = GET_AP_SSID();
@@ -218,6 +255,7 @@ namespace CloudMouse::Hardware
             break;
 
         case EventType::DISPLAY_WIFI_SETUP_URL:
+            wakeUp();
             currentScreen = Screen::WIFI_AP_CONNECTED;
             
             lv_qrcode_set_data(qr_ap_connected, WIFI_CONFIG_SERVICE);

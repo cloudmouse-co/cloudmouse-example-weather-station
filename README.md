@@ -17,7 +17,7 @@ This example showcases a production-ready weather station application built on t
 - **Dual-core architecture** for smooth 30Hz UI rendering
 - **Clean service separation** with event-driven communication
 
-## 📋 Overview
+## 📋 Features
 
 ### Weather Display
 - 🌡️ **Current temperature** with decimal precision
@@ -43,6 +43,29 @@ This example showcases a production-ready weather station application built on t
   - Rotary encoder
   - NeoPixel LED ring
   - WiFi connectivity
+
+
+## 🔧 Compatibility
+
+**Arduino IDE** - out-of-the-box.
+**Platformio** - with source code switching (see below!).
+
+### Important: Source Code Switching
+
+> ⚠️ The project maintains a single codebase that works with both Arduino IDE and PlatformIO. The `src/main.cpp` file is kept in sync but needs to be toggled:
+
+**To use PlatformIO:**
+1. Open `src/main.cpp` in your editor
+2. **Uncomment the entire file**
+3. Save and build with PlatformIO
+
+**To switch back to Arduino IDE:**
+1. Open `src/main.cpp` in your editor
+2. **Re-comment the entire file**
+3. Save and build with Arduino IDE
+
+> 💡 **Pro tip**: Most editors support block comment toggling with `Ctrl+/` (Windows/Linux) or `Cmd+/` (Mac). Select all (`Ctrl+A`) then toggle comments!
+
 
 ## 📚 Prerequisites
 

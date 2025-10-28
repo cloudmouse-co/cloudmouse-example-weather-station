@@ -9,6 +9,39 @@
 #include "../config/lv_conf.h"
 #include "../ui/WeatherUI.h"
 
+/**
+ * Operational and idle brightness targets with dimmer fade out
+ */
+#define BRIGHTNESS_UP_TARGET 180
+#define BRIGHTNESS_IDLE_TARGET 10
+#define FADE_OUT_STEP_DELAY_MS 20
+#define FADE_OUT_STEP_VALUE 2
+
+/**
+ * Display Management Controller
+ *
+ * High-level display controller providing event-driven UI management with multiple
+ * screen states, smooth animations, and integrated QR code generation capabilities.
+ *
+ * Architecture:
+ * - Event-driven screen state machine with automatic transitions
+ * - Hardware-accelerated sprite rendering with PSRAM buffering
+ * - Modular screen rendering system for extensible UI development
+ * - Integrated timing management for smooth animations and responsive updates
+ *
+ * Memory Management:
+ * - Uses PSRAM for large sprite buffer to preserve main RAM
+ * - Automatic sprite allocation and cleanup in constructor/destructor
+ * - Efficient color palette with predefined UI theme colors
+ * - Memory-conscious rendering with selective update regions
+ *
+ * Thread Safety:
+ * - Designed for single UI task usage (typically Core1)
+ * - Event processing is non-blocking with queue-based communication
+ * - Sprite operations are inherently thread-safe when called from single task
+ * - No shared mutable state across multiple tasks
+ */
+
 namespace CloudMouse::Hardware
 {
     using namespace CloudMouse::Utils;
@@ -89,6 +122,11 @@ namespace CloudMouse::Hardware
         int32_t encoder_diff = 0;
         lv_indev_state_t encoder_state = LV_INDEV_STATE_RELEASED;
 
+        // Brightness management variables
+        int currentBrightness = BRIGHTNESS_UP_TARGET;
+        unsigned long lastInteractionTime = 0;
+        unsigned long lastFadeTime = 0;
+
         // ========================================================================
         // UI COLOR SCHEME DEFINITIONS
         // ========================================================================
@@ -109,5 +147,12 @@ namespace CloudMouse::Hardware
         void createApModeScreen();
         void createApConnectedScreen();
         lv_obj_t* createHeader(lv_obj_t* parent, const char* title);
+
+        // ========================================================================
+        // SCREEN BRIGHTNESS MANAGEMENT
+        // ========================================================================
+        
+        void wakeUp();
+        void handleDimmer();
     };
 };

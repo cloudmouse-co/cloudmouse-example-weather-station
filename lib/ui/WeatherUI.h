@@ -29,6 +29,10 @@ namespace CloudMouse {
 
 // Declare Font Awesome fonts (must be included in your project)
 extern "C" {
+  // #ifdef PLATFORMIO
+  //   #include "../../font_awesome_solid_24.c"
+  //   #include "../../font_awesome_solid_48.c"
+  // #endif
   LV_FONT_DECLARE(font_awesome_solid_48);
   LV_FONT_DECLARE(font_awesome_solid_24);
 }
