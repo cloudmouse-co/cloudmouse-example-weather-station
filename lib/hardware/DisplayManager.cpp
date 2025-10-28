@@ -71,7 +71,7 @@ namespace CloudMouse::Hardware
         Serial.printf("✅ Buffer LVGL allocated in PSRAM (2x %d bytes)\n", sizeof(lv_color_t) * bufSize);
 
 
-        // 5. flushing PSRAM buffers to prevent residual corrupted data on power disconnection
+        // Flushing PSRAM buffers to prevent residual corrupted data on power disconnection
         const size_t totalBufBytes = sizeof(lv_color_t) * bufSize;
 
         memset(buf1, 0, totalBufBytes);
@@ -79,7 +79,7 @@ namespace CloudMouse::Hardware
 
         Serial.println("✅ PSRAM Buffers flushed.");
 
-        // 6. LVGL display driver init (v9)
+        // LVGL display driver init (v9)
         disp = lv_display_create(getWidth(), getHeight());
         if (disp == NULL) {
              Serial.println("❌ LVGL display creation failed!");
@@ -89,7 +89,7 @@ namespace CloudMouse::Hardware
         lv_display_set_buffers(disp, buf1, buf2, bufSize * sizeof(lv_color_t), LV_DISPLAY_RENDER_MODE_PARTIAL);
         lv_display_set_user_data(disp, this);
 
-        // 7. LVGL input (Encoder) driver init (v9)
+        // LVGL input (Encoder) driver init (v9)
         indev = lv_indev_create();
         if (indev == NULL) {
              Serial.println("❌ LVGL indev init failed!");
@@ -99,12 +99,12 @@ namespace CloudMouse::Hardware
         lv_indev_set_read_cb(indev, lvgl_encoder_read_cb);
         lv_indev_set_user_data(indev, this);
 
-        // 8. Create a group and assing it to the encoder
+        // Create a group and assing it to the encoder
         encoder_group = lv_group_create();
         lv_group_set_default(encoder_group);
         lv_indev_set_group(indev, encoder_group);
 
-        // 9. Create LVGL UI 
+        // Create LVGL UI 
         Serial.println("🎨 Creating UI LVGL...");
         createUi();
 
