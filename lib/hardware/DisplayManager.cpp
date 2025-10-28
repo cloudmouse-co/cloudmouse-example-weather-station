@@ -119,8 +119,6 @@ namespace CloudMouse::Hardware
         {
             processEvent(event);
         }
-        lv_timer_handler();
-    }
 
         // Update time display on weather screen every second
         static unsigned long lastTimeUpdate = 0;
