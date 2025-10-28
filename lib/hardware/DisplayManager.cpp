@@ -71,7 +71,15 @@ namespace CloudMouse::Hardware
         Serial.printf("✅ Buffer LVGL allocated in PSRAM (2x %d bytes)\n", sizeof(lv_color_t) * bufSize);
 
 
-        // 5. LVGL display driver init (v9)
+        // 5. flushing PSRAM buffers to prevent residual corrupted data on power disconnection
+        const size_t totalBufBytes = sizeof(lv_color_t) * bufSize;
+
+        memset(buf1, 0, totalBufBytes);
+        memset(buf2, 0, totalBufBytes);
+
+        Serial.println("✅ PSRAM Buffers flushed.");
+
+        // 6. LVGL display driver init (v9)
         disp = lv_display_create(getWidth(), getHeight());
         if (disp == NULL) {
              Serial.println("❌ LVGL display creation failed!");
@@ -81,7 +89,7 @@ namespace CloudMouse::Hardware
         lv_display_set_buffers(disp, buf1, buf2, bufSize * sizeof(lv_color_t), LV_DISPLAY_RENDER_MODE_PARTIAL);
         lv_display_set_user_data(disp, this);
 
-        // 6. LVGL input (Encoder) driver init (v9)
+        // 7. LVGL input (Encoder) driver init (v9)
         indev = lv_indev_create();
         if (indev == NULL) {
              Serial.println("❌ LVGL indev init failed!");
@@ -91,17 +99,14 @@ namespace CloudMouse::Hardware
         lv_indev_set_read_cb(indev, lvgl_encoder_read_cb);
         lv_indev_set_user_data(indev, this);
 
-        // 7. Create a group and assing it to the encoder
+        // 8. Create a group and assing it to the encoder
         encoder_group = lv_group_create();
         lv_group_set_default(encoder_group);
         lv_indev_set_group(indev, encoder_group);
 
-        // 8. Create LVGL UI 
+        // 9. Create LVGL UI 
         Serial.println("🎨 Creating UI LVGL...");
         createUi();
-
-        // 9. Carica la schermata iniziale
-        lv_disp_load_scr(screen_hello_world); // ERRORE 3: Corretto (era lv_display_load_scr)
 
         initialized = true;
         Serial.printf("✅ DisplayManager with LVGL v9 succesfully initialized!\n");
@@ -109,13 +114,13 @@ namespace CloudMouse::Hardware
 
     void DisplayManager::update()
     {
-        // Process all pending events from EventBus (non-blocking)
-        // Events drive screen state changes and UI updates
         Event event;
         while (EventBus::instance().receiveFromMain(event, 0))
         {
             processEvent(event);
         }
+        lv_timer_handler();
+    }
 
         // Update time display on weather screen every second
         static unsigned long lastTimeUpdate = 0;

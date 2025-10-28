@@ -31,12 +31,6 @@
   #include "lib/services/WeatherService.h" 
 #endif
 
-#include <lvgl.h>
-
-// Declare Font Awesome fonts (defined in /assets/*.c files)
-LV_FONT_DECLARE(font_awesome_solid_48);
-LV_FONT_DECLARE(font_awesome_solid_24);
-
 using namespace CloudMouse;
 
 // Hardware component instances
@@ -46,7 +40,6 @@ WiFiManager wifi;
 WebServerManager webServer(wifi);
 LEDManager ledManager;
 
-// Weather service instance - Italy east cost coordinates
 WeatherService weatherService(43.9395805, 12.7710328); 
 
 void setup() {

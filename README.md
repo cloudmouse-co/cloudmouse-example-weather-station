@@ -15,7 +15,7 @@ This example showcases a production-ready weather station application built on t
 - **Dual-core architecture** for smooth 30Hz UI rendering
 - **Clean service separation** with event-driven communication
 
-## ✨ Features
+## 📋 Overview
 
 ### Weather Display
 - 🌡️ **Current temperature** with decimal precision
