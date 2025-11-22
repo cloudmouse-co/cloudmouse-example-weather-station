@@ -377,7 +377,7 @@ The dual-core architecture keeps UI rendering smooth at 30Hz while background ta
 ## 🔗 Useful Links
 
 - [CloudMouse website](https://cloudmouse.co)
-- [CloudMouse SDK](https://github.com/tibonilab/cloudmouse-boilerplate)
+- [CloudMouse SDK](https://github.com/cloudmouse-co/cloudmouse-sdk)
 - [LVGL Documentation](https://docs.lvgl.io/)
 - [Open-Meteo API](https://open-meteo.com/)
 - [Font Awesome Icons](https://fontawesome.com/)
@@ -398,7 +398,7 @@ Contributions are welcome! Feel free to:
 
 ## 🙏 Credits
 
-- **CloudMouse SDK** by [Tiboni Lab](https://github.com/tibonilab)
+- **CloudMouse SDK** by [CloudMouse](https://cloudmouse.co/)
 - **LVGL** by [LVGL LLC](https://lvgl.io/)
 - **Open-Meteo API** by [Open-Meteo](https://open-meteo.com/)
 - **Font Awesome** by [Fonticons, Inc.](https://fontawesome.com/)

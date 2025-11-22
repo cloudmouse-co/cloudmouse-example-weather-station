@@ -12,7 +12,7 @@
  * - Core 1: UI rendering, encoder input, display updates (30Hz)
  */
 
-#pragma once;
+#pragma once
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -89,6 +89,13 @@ namespace CloudMouse
 
     // service component registrations
     void setWeatherService(WeatherService* service) { this->weatherService = service; }
+    
+    // Hardware components getters
+    EncoderManager* getEncoder() const { return encoder; }
+    DisplayManager* getDisplay() const { return display; }
+    WiFiManager* getWiFi() const { return wifi; }
+    WebServerManager* getWebServer() const { return webServer; }
+    LEDManager* getLEDManager() const { return ledManager; }
 
     // State management
     SystemState getState() const { return currentState; }

@@ -12,7 +12,6 @@
 //  */
 
 // // Platform-specific includes for maximum compatibility
-// #ifdef PLATFORMIO
 //   #include "../lib/core/Core.h"
 //   #include "../lib/hardware/EncoderManager.h"
 //   #include "../lib/hardware/DisplayManager.h"
@@ -21,15 +20,6 @@
 //   #include "../lib/network/WebServerManager.h"
 //   #include "../lib/hardware/LEDManager.h"
 //   #include "../lib/services/WeatherService.h" 
-// #else
-//   #include "lib/core/Core.h"
-//   #include "lib/hardware/EncoderManager.h"
-//   #include "lib/hardware/DisplayManager.h"
-//   #include "lib/hardware/SimpleBuzzer.h"
-//   #include "lib/network/WiFiManager.h"
-//   #include "lib/network/WebServerManager.h"
-//   #include "lib/hardware/LEDManager.h"
-// #endif
 
 // using namespace CloudMouse;
 

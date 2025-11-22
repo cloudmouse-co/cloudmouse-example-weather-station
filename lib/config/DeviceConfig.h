@@ -228,6 +228,14 @@ namespace CloudMouse
  */
 #define WIFI_CONFIG_SERVICE "http://192.168.4.1/"
 
+/**
+ * Device manufacturer
+ * 
+ * Applications:
+ * - Used for BLE connection setup
+ */
+#define DEVICE_MANUFACTURER "Cloudmouse"
+
 // ============================================================================
 // CONFIGURATION VALIDATION
 // ============================================================================
@@ -240,8 +248,8 @@ namespace CloudMouse
  */
 
 // Helper macros for string conversion
-#define STRINGIFY(x) #x
-#define XSTRINGIFY(x) STRINGIFY(x)
+// #define STRINGIFY(x) #x
+// #define XSTRINGIFY(x) STRINGIFY(x)
 
 // Validate PCB version selection
 #if !defined(PCB_VERSION) || (PCB_VERSION != 4 && PCB_VERSION != 5)
@@ -254,9 +262,9 @@ namespace CloudMouse
 #endif
 
 // Configuration summary for compile-time verification
-#pragma message "CloudMouse SDK Configuration:"
-#pragma message "  PCB Version: " XSTRINGIFY(PCB_VERSION)
-#pragma message "  Firmware: " FIRMWARE_VERSION
-#pragma message "  WiFi Required: " XSTRINGIFY(WIFI_REQUIRED)
+// #pragma message "CloudMouse SDK Configuration:"
+// #pragma message "  PCB Version: " XSTRINGIFY(PCB_VERSION)
+// #pragma message "  Firmware: " FIRMWARE_VERSION
+// #pragma message "  WiFi Required: " XSTRINGIFY(WIFI_REQUIRED)
 }
 #endif // DEVICE_CONFIG_H

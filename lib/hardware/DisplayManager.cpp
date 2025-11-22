@@ -204,6 +204,14 @@ namespace CloudMouse::Hardware
 
     void DisplayManager::processEvent(const Event &event)
     {
+        // First priority: forward event to app callback if registered
+        // This allows a custom DisplayManager to intercept and handle events
+        if (appCallback) {
+            appCallback(event);
+        }
+
+        // Process display-related events and trigger appropriate screen updates
+        // Each event type corresponds to specific UI state changes or user interactions
         switch (event.type)
         {
         case EventType::DISPLAY_WAKE_UP:
