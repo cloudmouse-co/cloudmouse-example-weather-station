@@ -12,14 +12,15 @@
 //  */
 
 // // Platform-specific includes for maximum compatibility
-//   #include "../lib/core/Core.h"
-//   #include "../lib/hardware/EncoderManager.h"
-//   #include "../lib/hardware/DisplayManager.h"
-//   #include "../lib/hardware/SimpleBuzzer.h"
-//   #include "../lib/network/WiFiManager.h"
-//   #include "../lib/network/WebServerManager.h"
-//   #include "../lib/hardware/LEDManager.h"
-//   #include "../lib/services/WeatherService.h" 
+// #include "../lib/core/Core.h"
+// #include "../lib/hardware/EncoderManager.h"
+// #include "../lib/hardware/DisplayManager.h"
+// #include "../lib/hardware/SimpleBuzzer.h"
+// #include "../lib/network/WiFiManager.h"
+// #include "../lib/network/WebServerManager.h"
+// #include "../lib/hardware/LEDManager.h"
+// #include "../lib/services/WeatherService.h" 
+// #include "../lib/utils/Logger.h"
 
 // using namespace CloudMouse;
 
@@ -61,7 +62,7 @@
 //     Core::instance().startUITask();     // UI rendering on Core 1
 //     Core::instance().initialize();      // Event system on Core 0
     
-//     Serial.println("✅ System ready!");
+//     SDK_LOGGER("✅ System ready!");
 // }
 
 // void loop() {

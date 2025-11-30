@@ -7,6 +7,7 @@
  */
 
 #include "PreferencesManager.h"
+#include "../utils/Logger.h"
 
 namespace CloudMouse::Prefs
 {
@@ -28,11 +29,11 @@ namespace CloudMouse::Prefs
             nvsMutex = xSemaphoreCreateMutex();
             if (nvsMutex == NULL)
             {
-                Serial.println("❌ FATAL: Failed to create NVS mutex!");
+                SDK_LOGGER("❌ FATAL: Failed to create NVS mutex!");
             }
             else
             {
-                Serial.println("✅ NVS mutex created");
+                SDK_LOGGER("✅ NVS mutex created");
             }
         }
 
@@ -173,7 +174,7 @@ namespace CloudMouse::Prefs
         // Check if already open (nested call)
         if (batchOpen)
         {
-            Serial.println("⚠️ Batch already open (nested call), keeping it open");
+            SDK_LOGGER("⚠️ Batch already open (nested call), keeping it open");
             batchDepth++;
             return true;
         }
@@ -188,16 +189,16 @@ namespace CloudMouse::Prefs
                 batchDepth = 1;
                 if (attempt > 0)
                 {
-                    Serial.printf("✅ Batch opened on attempt %d\n", attempt + 1);
+                    SDK_LOGGER("✅ Batch opened on attempt %d\n", attempt + 1);
                 }
                 return true;
             }
 
-            Serial.printf("⚠️ Batch open failed (attempt %d/3), retrying...\n", attempt + 1);
+            SDK_LOGGER("⚠️ Batch open failed (attempt %d/3), retrying...\n", attempt + 1);
             delay(10);
         }
 
-        Serial.printf("❌ Batch open FAILED after 3 attempts! (namespace=%s)\n", space);
+        SDK_LOGGER("❌ Batch open FAILED after 3 attempts! (namespace=%s)\n", space);
         
         // Release mutex on failure
         if (nvsMutex != NULL)
@@ -231,7 +232,7 @@ namespace CloudMouse::Prefs
         batchDepth--;
         if (batchDepth > 0)
         {
-            Serial.printf("⚠️ Nested batch, depth now: %d\n", batchDepth);
+            SDK_LOGGER("⚠️ Nested batch, depth now: %d\n", batchDepth);
             return;
         }
 
@@ -314,11 +315,11 @@ namespace CloudMouse::Prefs
      */
     void PreferencesManager::clearAll()
     {
-        Serial.println("🗑️ Clearing all preferences...");
+        SDK_LOGGER("🗑️ Clearing all preferences...");
         begin(false);
         preferences.clear();
         end();
-        Serial.println("✅ All preferences cleared!");
+        SDK_LOGGER("✅ All preferences cleared!");
     }
 
     // ============================================================================

@@ -252,7 +252,7 @@ namespace CloudMouse::Hardware
          * Usage Examples:
          * - Analytics: logInteraction(getLastPressDuration());
          * - Adaptive UI: adjustSensitivity(getLastPressDuration());
-         * - Debug logging: Serial.printf("Last press: %dms", getLastPressDuration());
+         * - Debug logging: SDK_LOGGER("Last press: %dms", getLastPressDuration());
          */
         int getLastPressDuration() const;
 

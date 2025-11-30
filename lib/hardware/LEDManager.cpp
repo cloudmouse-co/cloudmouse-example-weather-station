@@ -7,6 +7,7 @@
 
 #include "./LEDManager.h"
 #include <string>
+#include "../utils/Logger.h"
 
 namespace CloudMouse::Hardware
 {
@@ -24,7 +25,7 @@ namespace CloudMouse::Hardware
 
     void LEDManager::init()
     {
-        Serial.println("💡 Initializing LEDManager...");
+        SDK_LOGGER("💡 Initializing LEDManager...");
 
         // Initialize NeoPixel hardware
         strip.begin();
@@ -36,21 +37,21 @@ namespace CloudMouse::Hardware
         ledEventQueue = xQueueCreate(LED_QUEUE_SIZE, sizeof(LEDEvent));
         if (!ledEventQueue)
         {
-            Serial.println("❌ Failed to create LED event queue!");
+            SDK_LOGGER("❌ Failed to create LED event queue!");
             return;
         }
 
         // Load user's preferred color theme
         setMainColor();
 
-        Serial.println("✅ LEDManager initialized successfully");
+        SDK_LOGGER("✅ LEDManager initialized successfully");
     }
 
     void LEDManager::startAnimationTask()
     {
         if (animationTaskHandle)
         {
-            Serial.println("💡 LED Animation task already running");
+            SDK_LOGGER("💡 LED Animation task already running");
             return;
         }
 
@@ -67,11 +68,11 @@ namespace CloudMouse::Hardware
 
         if (animationTaskHandle)
         {
-            Serial.println("✅ LED Animation task started on Core 1");
+            SDK_LOGGER("✅ LED Animation task started on Core 1");
         }
         else
         {
-            Serial.println("❌ Failed to start LED Animation task!");
+            SDK_LOGGER("❌ Failed to start LED Animation task!");
         }
     }
 
@@ -81,7 +82,7 @@ namespace CloudMouse::Hardware
         {
             vTaskDelete(animationTaskHandle);
             animationTaskHandle = nullptr;
-            Serial.println("💡 LED Animation task stopped");
+            SDK_LOGGER("💡 LED Animation task stopped");
         }
     }
 
@@ -100,7 +101,7 @@ namespace CloudMouse::Hardware
         TickType_t lastWake = xTaskGetTickCount();
         uint32_t loopCounter = 0;
 
-        Serial.println("💡 LED Animation loop started");
+        SDK_LOGGER("💡 LED Animation loop started");
 
         while (true)
         {
@@ -109,7 +110,7 @@ namespace CloudMouse::Hardware
             // Health monitoring every 1000 loops
             if (loopCounter % 1000 == 0)
             {
-                Serial.printf("💡 LED Task alive - loops: %d, free stack: %d\n",
+                SDK_LOGGER("💡 LED Task alive - loops: %d, free stack: %d\n",
                               loopCounter, uxTaskGetStackHighWaterMark(NULL));
             }
 
@@ -193,6 +194,26 @@ namespace CloudMouse::Hardware
                 strip.show();
                 break;
 
+            case LEDEventType::SET_RAINBOW:
+                rainbow = event.state;
+                if (rainbow)
+                {
+                    // Quando l'arcobaleno inizia, ferma tutto il resto
+                    pulsating = false;
+                    fading = false;
+                    loading = false;
+                    flash = false;
+                }
+                else
+                {
+                    // Quando l'arcobaleno finisce, torna al colore base
+                    setAllLEDs(baseRed, baseGreen, baseBlue);
+                    strip.show();
+                    // Potresti voler far tornare in stato di 'pulsating'
+                    pulsating = true;
+                }
+                break;
+
             default:
                 // Unknown event type
                 break;
@@ -212,8 +233,9 @@ namespace CloudMouse::Hardware
         // 1. Fade (smooth transitions)
         // 2. Flash (immediate user feedback)
         // 3. Loading (WiFi connection state)
-        // 4. Init (boot sequence)
-        // 5. Pulsating (idle breathing)
+        // 4. Rainbow (Rainbow animation effect)
+        // 5. Init (boot sequence)
+        // 6. Pulsating (idle breathing)
 
         if (fading)
         {
@@ -230,6 +252,12 @@ namespace CloudMouse::Hardware
         if (loading)
         {
             updateLoadingAnimation();
+            return;
+        }
+
+        if (rainbow)
+        {
+            updateRainbowAnimation();
             return;
         }
 
@@ -317,7 +345,7 @@ namespace CloudMouse::Hardware
         {
             initAnimationCompleted = true;
             pulsating = true;
-            Serial.println("💡 LED Init animation completed!");
+            SDK_LOGGER("💡 LED Init animation completed!");
         }
     }
 
@@ -408,6 +436,36 @@ namespace CloudMouse::Hardware
         }
     }
 
+    void LEDManager::updateRainbowAnimation()
+    {
+        // Variabile statica per il timing del movimento dell'arcobaleno
+        static unsigned long lastRainbowUpdate = 0;
+        const uint8_t RAINBOW_SPEED_MS = 20; // 20ms tra ogni frame
+
+        if (millis() - lastRainbowUpdate >= RAINBOW_SPEED_MS)
+        {
+            lastRainbowUpdate = millis();
+
+            for (int i = 0; i < NUM_LEDS; i++)
+            {
+                // La formula chiave per l'arcobaleno scorrevole:
+                // Combina la posizione del LED (i) e la posizione corrente di scorrimento (rainbowPosition)
+                // L'offset assicura che il colore di ogni LED sia leggermente diverso
+                uint32_t color = Wheel(((i * 256 / NUM_LEDS) + rainbowPosition) & 255);
+                strip.setPixelColor(i, color);
+            }
+
+            strip.show();
+
+            // Incrementa la posizione per il prossimo ciclo, creando l'effetto di scorrimento
+            rainbowPosition++;
+            if (rainbowPosition > 255)
+            {
+                rainbowPosition = 0; // Riparti da capo
+            }
+        }
+    }
+
     // ============================================================================
     // THREAD-SAFE PUBLIC INTERFACE
     // ============================================================================
@@ -417,6 +475,16 @@ namespace CloudMouse::Hardware
         LEDEvent event;
         event.type = LEDEventType::SET_LOADING;
         event.state = on;
+        sendLEDEvent(event);
+    }
+
+    void LEDManager::setRainbowState(bool on, uint8_t wait_ms)
+    {
+        LEDEvent event;
+        event.type = LEDEventType::SET_RAINBOW;
+        event.state = on;
+        // Il parametro wait_ms non viene usato nell'evento, ma è utile
+        // per documentare la velocità desiderata (che è fissa in updateRainbowAnimation)
         sendLEDEvent(event);
     }
 
@@ -502,7 +570,7 @@ namespace CloudMouse::Hardware
         }
         else
         {
-            Serial.printf("⚠️ Unknown LED color: %s, using azure\n", actualColorName.c_str());
+            SDK_LOGGER("⚠️ Unknown LED color: %s, using azure\n", actualColorName.c_str());
         }
 
         LEDEvent event;
@@ -512,7 +580,7 @@ namespace CloudMouse::Hardware
         event.b = b;
         sendLEDEvent(event);
 
-        Serial.printf("💡 LED Color set to: %s (%d,%d,%d)\n", actualColorName.c_str(), r, g, b);
+        SDK_LOGGER("💡 LED Color set to: %s (%d,%d,%d)\n", actualColorName.c_str(), r, g, b);
     }
 
     // ============================================================================
@@ -526,7 +594,7 @@ namespace CloudMouse::Hardware
 
         if (xQueueSend(ledEventQueue, &event, pdMS_TO_TICKS(10)) != pdPASS)
         {
-            Serial.println("⚠️ LED event queue full!");
+            SDK_LOGGER("⚠️ LED event queue full!");
             return false;
         }
         return true;
@@ -570,11 +638,33 @@ namespace CloudMouse::Hardware
         {
             vTaskDelete(animationTaskHandle);
             animationTaskHandle = nullptr;
-            Serial.println("💡 LED Animation task deleted");
+            SDK_LOGGER("💡 LED Animation task deleted");
         }
 
         delay(100); // Brief pause for cleanup
         startAnimationTask();
+    }
+
+    uint32_t LEDManager::Wheel(byte WheelPos)
+    {
+        WheelPos = 255 - WheelPos;
+        if (WheelPos < 85)
+        {
+            // Rosso -> Verde
+            return strip.Color(255 - WheelPos * 3, 0, WheelPos * 3);
+        }
+        else if (WheelPos < 170)
+        {
+            // Verde -> Blu
+            WheelPos -= 85;
+            return strip.Color(0, WheelPos * 3, 255 - WheelPos * 3);
+        }
+        else
+        {
+            // Blu -> Rosso
+            WheelPos -= 170;
+            return strip.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
+        }
     }
 
 } // namespace CloudMouse

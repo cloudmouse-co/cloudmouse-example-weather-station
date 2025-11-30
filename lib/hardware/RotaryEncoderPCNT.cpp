@@ -6,7 +6,7 @@
  */
 
 #include "RotaryEncoderPCNT.h"
-
+#include "../utils/Logger.h"
 // ============================================================================
 // HARDWARE INITIALIZATION IMPLEMENTATION
 // ============================================================================
@@ -15,7 +15,7 @@ void RotaryEncoderPCNT::init() {
 #ifdef USE_OLD_PCNT_API
     // ============ ESP-IDF 4.4 API (PlatformIO) ============
     
-    Serial.printf("🔧 Initializing PCNT on pins A=%d, B=%d\n", pin_a, pin_b);
+    SDK_LOGGER("🔧 Initializing PCNT on pins A=%d, B=%d\n", pin_a, pin_b);
     
     // Configure GPIO pins with pull-up resistors
     pinMode(pin_a, INPUT_PULLUP);
@@ -36,7 +36,7 @@ void RotaryEncoderPCNT::init() {
     
     esp_err_t err = pcnt_unit_config(&pcnt_config_a);
     if (err != ESP_OK) {
-        Serial.printf("❌ PCNT channel 0 config failed: %d\n", err);
+        SDK_LOGGER("❌ PCNT channel 0 config failed: %d\n", err);
         return;
     }
     
@@ -55,7 +55,7 @@ void RotaryEncoderPCNT::init() {
     
     err = pcnt_unit_config(&pcnt_config_b);
     if (err != ESP_OK) {
-        Serial.printf("❌ PCNT channel 1 config failed: %d\n", err);
+        SDK_LOGGER("❌ PCNT channel 1 config failed: %d\n", err);
         return;
     }
     
@@ -64,7 +64,7 @@ void RotaryEncoderPCNT::init() {
         err = pcnt_set_filter_value(PCNT_UNIT_0, glitch_time);
         if (err == ESP_OK) {
             pcnt_filter_enable(PCNT_UNIT_0);
-            Serial.printf("✅ Glitch filter enabled: %dns\n", glitch_time);
+            SDK_LOGGER("✅ Glitch filter enabled: %dns\n", glitch_time);
         }
     }
     
@@ -73,12 +73,12 @@ void RotaryEncoderPCNT::init() {
     pcnt_counter_clear(PCNT_UNIT_0);
     pcnt_counter_resume(PCNT_UNIT_0);
     
-    Serial.println("✅ RotaryEncoder initialized (IDF 4.4 API)");
+    SDK_LOGGER("✅ RotaryEncoder initialized (IDF 4.4 API)");
     
 #elif defined(USE_NEW_PCNT_API)
     // ============ ESP-IDF 5.x API (Arduino IDE) ============
     
-    Serial.printf("🔧 Initializing PCNT on pins A=%d, B=%d\n", pin_a, pin_b);
+    SDK_LOGGER("🔧 Initializing PCNT on pins A=%d, B=%d\n", pin_a, pin_b);
     
     // Configure PCNT unit
     pcnt_unit_config_t unit_config = {
@@ -119,7 +119,7 @@ void RotaryEncoderPCNT::init() {
     pcnt_unit_clear_count(unit);
     pcnt_unit_start(unit);
     
-    Serial.println("✅ RotaryEncoder initialized (IDF 5.x API)");
+    SDK_LOGGER("✅ RotaryEncoder initialized (IDF 5.x API)");
 #endif
 }
 
@@ -132,7 +132,7 @@ void RotaryEncoderPCNT::deinit() {
     // ESP-IDF 4.4 cleanup
     pcnt_counter_pause(PCNT_UNIT_0);
     pcnt_counter_clear(PCNT_UNIT_0);
-    Serial.println("🔧 PCNT deinitialized (IDF 4.4 API)");
+    SDK_LOGGER("🔧 PCNT deinitialized (IDF 4.4 API)");
     
 #elif defined(USE_NEW_PCNT_API)
     // ESP-IDF 5.x cleanup
@@ -145,7 +145,7 @@ void RotaryEncoderPCNT::deinit() {
         unit = nullptr;
         chan_a = nullptr;
         chan_b = nullptr;
-        Serial.println("🔧 PCNT deinitialized (IDF 5.x API)");
+        SDK_LOGGER("🔧 PCNT deinitialized (IDF 5.x API)");
     }
 #endif
 }
@@ -167,7 +167,7 @@ int RotaryEncoderPCNT::position() {
         // Error handling: return last valid value
         static int last_valid = 0;
         value = last_valid;
-        Serial.printf("⚠️ PCNT read error: %d, using last valid: %d\n", err, last_valid);
+        SDK_LOGGER("⚠️ PCNT read error: %d, using last valid: %d\n", err, last_valid);
     }
     
 #elif defined(USE_NEW_PCNT_API)
@@ -178,11 +178,11 @@ int RotaryEncoderPCNT::position() {
         if (err == ESP_OK) {
             value = temp_count + offset;
         } else {
-            Serial.printf("⚠️ PCNT read error: %d\n", err);
+            SDK_LOGGER("⚠️ PCNT read error: %d\n", err);
             value = offset; // Fallback to offset only
         }
     } else {
-        Serial.println("⚠️ PCNT unit not initialized");
+        SDK_LOGGER("⚠️ PCNT unit not initialized");
         value = offset;
     }
 #endif
@@ -201,14 +201,14 @@ void RotaryEncoderPCNT::setPosition(int pos) {
     // Clear hardware counter to establish new zero point
 #ifdef USE_OLD_PCNT_API
     pcnt_counter_clear(PCNT_UNIT_0);
-    Serial.printf("🔧 Position set to %d (IDF 4.4)\n", pos);
+    SDK_LOGGER("🔧 Position set to %d (IDF 4.4)\n", pos);
     
 #elif defined(USE_NEW_PCNT_API)
     if (unit) {
         pcnt_unit_clear_count(unit);
-        Serial.printf("🔧 Position set to %d (IDF 5.x)\n", pos);
+        SDK_LOGGER("🔧 Position set to %d (IDF 5.x)\n", pos);
     } else {
-        Serial.println("⚠️ Cannot set position - PCNT unit not initialized");
+        SDK_LOGGER("⚠️ Cannot set position - PCNT unit not initialized");
     }
 #endif
 }

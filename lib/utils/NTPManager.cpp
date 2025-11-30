@@ -6,12 +6,15 @@
  */
 
 #include "./NTPManager.h"
+#include "Logger.h"
 
 const long ITALIAN_GMT_OFFSET_SEC = 3600;
 const int ITALIAN_DST_OFFSET_SEC = 0;
 
 namespace CloudMouse::Utils
 {
+
+    using namespace CloudMouse;
 
     // Static member initialization
     bool NTPManager::timeInitialized = false;
@@ -42,11 +45,11 @@ namespace CloudMouse::Utils
     {
         if (WiFi.status() != WL_CONNECTED)
         {
-            Serial.println("⏰ WiFi not connected - cannot initialize NTP");
+            SDK_LOGGER("⏰ WiFi not connected - cannot initialize NTP");
             return;
         }
 
-        Serial.println("⏰ Initializing NTP time synchronization...");
+        SDK_LOGGER("⏰ Initializing NTP time synchronization...");
 
         // Store timezone configuration
         gmtOffset_sec = gmtOffsetSec;
@@ -66,12 +69,12 @@ namespace CloudMouse::Utils
         if (isTimeSet())
         {
             timeInitialized = true;
-            Serial.println("✅ NTP synchronized successfully");
+            SDK_LOGGER("✅ NTP synchronized successfully");
             printCurrentTime();
         }
         else
         {
-            Serial.println("❌ NTP synchronization failed - check network connection");
+            SDK_LOGGER("❌ NTP synchronization failed - check network connection");
         }
     }
 
@@ -103,14 +106,14 @@ namespace CloudMouse::Utils
     {
         if (!timeInitialized || !isTimeSet())
         {
-            Serial.println("⚠️ NTP not initialized or time not synchronized");
+            SDK_LOGGER("⚠️ NTP not initialized or time not synchronized");
             return "1970-01-01 00:00:00"; // Unix epoch as fallback
         }
 
         struct tm timeinfo;
         if (!getLocalTime(&timeinfo))
         {
-            Serial.println("❌ Failed to obtain local time");
+            SDK_LOGGER("❌ Failed to obtain local time");
             return "1970-01-01 00:00:00";
         }
 
@@ -123,14 +126,14 @@ namespace CloudMouse::Utils
     {
         if (!timeInitialized || !isTimeSet())
         {
-            Serial.println("⚠️ NTP not initialized or time not synchronized");
+            SDK_LOGGER("⚠️ NTP not initialized or time not synchronized");
             return "1970-01-01";
         }
 
         struct tm timeinfo;
         if (!getLocalTime(&timeinfo))
         {
-            Serial.println("❌ Failed to obtain local time");
+            SDK_LOGGER("❌ Failed to obtain local time");
             return "1970-01-01";
         }
 
@@ -161,20 +164,20 @@ namespace CloudMouse::Utils
     {
         if (!isTimeSet())
         {
-            Serial.println("⏰ Time not available");
+            SDK_LOGGER("⏰ Time not available");
             return;
         }
 
         struct tm timeinfo;
         if (getLocalTime(&timeinfo))
         {
-            Serial.printf("⏰ Current local time: %s\n", getCurrentDateTime().c_str());
-            Serial.printf("⏰ Current date: %s\n", getCurrentDate().c_str());
+            SDK_LOGGER("⏰ Current local time: %s\n", getCurrentDateTime().c_str());
+            SDK_LOGGER("⏰ Current date: %s\n", getCurrentDate().c_str());
 
             // Show timezone info
             int offsetHours = gmtOffset_sec / 3600;
             int offsetMinutes = (abs(gmtOffset_sec) % 3600) / 60;
-            Serial.printf("⏰ Timezone: UTC%+d:%02d\n", offsetHours, offsetMinutes);
+            SDK_LOGGER("⏰ Timezone: UTC%+d:%02d\n", offsetHours, offsetMinutes);
         }
     }
 
@@ -186,7 +189,7 @@ namespace CloudMouse::Utils
     {
         if (!timeInitialized || !isTimeSet())
         {
-            Serial.println("⚠️ NTP not initialized or time not synchronized");
+            SDK_LOGGER("⚠️ NTP not initialized or time not synchronized");
             return "1970-01-01T00:00:00Z";
         }
 
@@ -196,7 +199,7 @@ namespace CloudMouse::Utils
 
         if (!utcTime)
         {
-            Serial.println("❌ Failed to get UTC time");
+            SDK_LOGGER("❌ Failed to get UTC time");
             return "1970-01-01T00:00:00Z";
         }
 
@@ -249,7 +252,7 @@ namespace CloudMouse::Utils
     {
         if (!isTimeSet())
         {
-            Serial.println("⏰ Time not available");
+            SDK_LOGGER("⏰ Time not available");
             return;
         }
 
@@ -260,13 +263,13 @@ namespace CloudMouse::Utils
 
         if (utcTime)
         {
-            Serial.printf("🌍 UTC time: %s\n", getCurrentDateTimeUTC().c_str());
-            Serial.printf("📍 Local time: %s\n", getCurrentDateTime().c_str());
+            SDK_LOGGER("🌍 UTC time: %s\n", getCurrentDateTimeUTC().c_str());
+            SDK_LOGGER("📍 Local time: %s\n", getCurrentDateTime().c_str());
 
             // Show timezone offset
             int offsetHours = gmtOffset_sec / 3600;
             int offsetMinutes = (abs(gmtOffset_sec) % 3600) / 60;
-            Serial.printf("⏰ Timezone offset: UTC%+d:%02d\n", offsetHours, offsetMinutes);
+            SDK_LOGGER("⏰ Timezone offset: UTC%+d:%02d\n", offsetHours, offsetMinutes);
         }
     }
 
@@ -278,7 +281,7 @@ namespace CloudMouse::Utils
     {
         if (!timeInitialized || !isTimeSet())
         {
-            Serial.println("⚠️ NTP not initialized or time not synchronized");
+            SDK_LOGGER("⚠️ NTP not initialized or time not synchronized");
             return 0;
         }
         return time(nullptr); // Unix timestamp in seconds
@@ -296,7 +299,7 @@ namespace CloudMouse::Utils
         // Reconfigure time if already initialized
         if (timeInitialized && WiFi.status() == WL_CONNECTED)
         {
-            Serial.printf("⏰ Updating timezone to UTC%+d:%02d\n",
+            SDK_LOGGER("⏰ Updating timezone to UTC%+d:%02d\n",
                           (int)(gmtOffsetSec / 3600),
                           (int)((abs(gmtOffsetSec) % 3600) / 60));
             configTime(gmtOffset_sec, daylightOffset_sec, ntpServer1, ntpServer2, ntpServer3);
@@ -309,7 +312,7 @@ namespace CloudMouse::Utils
         ntpServer2 = server2 ? server2 : DEFAULT_NTP_SERVER2;
         ntpServer3 = server3 ? server3 : DEFAULT_NTP_SERVER3;
 
-        Serial.printf("⏰ NTP servers updated: %s, %s, %s\n", ntpServer1, ntpServer2, ntpServer3);
+        SDK_LOGGER("⏰ NTP servers updated: %s, %s, %s\n", ntpServer1, ntpServer2, ntpServer3);
 
         // Reinitialize if already configured
         if (timeInitialized && WiFi.status() == WL_CONNECTED)

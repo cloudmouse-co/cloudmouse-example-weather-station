@@ -26,12 +26,37 @@
 #include "../network/WebServerManager.h"
 #include "../services/WeatherService.h"
 
-
 namespace CloudMouse
 {
 
   using namespace Hardware;
   using namespace Network;
+
+  /**
+   * Interface for custom App orchestrators
+   * Any app that wants to receive SDK events must implement this
+   */
+  class IAppOrchestrator
+  {
+  public:
+    virtual ~IAppOrchestrator() = default;
+
+    /**
+     * App orchestrator initialization
+     */
+    virtual bool initialize() = 0;
+
+    /**
+     * App Orchestrator update loop
+     */
+    virtual void update() = 0;
+
+    /**
+     * Process SDK events
+     * Used by Core when we need to forward events to App Orchestrator
+     */
+    virtual void processSDKEvent(const CloudMouse::Event &event) = 0;
+  };
 
   /**
    * System state machine for CloudMouse lifecycle management
@@ -91,15 +116,24 @@ namespace CloudMouse
     void setWeatherService(WeatherService* service) { this->weatherService = service; }
     
     // Hardware components getters
-    EncoderManager* getEncoder() const { return encoder; }
-    DisplayManager* getDisplay() const { return display; }
-    WiFiManager* getWiFi() const { return wifi; }
-    WebServerManager* getWebServer() const { return webServer; }
-    LEDManager* getLEDManager() const { return ledManager; }
+    EncoderManager *getEncoder() const { return encoder; }
+    DisplayManager *getDisplay() const { return display; }
+    WiFiManager *getWiFi() const { return wifi; }
+    WebServerManager *getWebServer() const { return webServer; }
+    LEDManager *getLEDManager() const { return ledManager; }
 
     // State management
     SystemState getState() const { return currentState; }
     void setState(SystemState state);
+
+    /**
+     * Register custom App orchestrator
+     * @param orchestrator Pointer to app that implements IAppOrchestrator
+     */
+    void setAppOrchestrator(IAppOrchestrator *orchestrator)
+    {
+      appOrchestrator = orchestrator;
+    }
 
   private:
     // Singleton pattern enforcement
@@ -124,6 +158,9 @@ namespace CloudMouse
     WiFiManager *wifi = nullptr;
     WebServerManager *webServer = nullptr;
     LEDManager *ledManager = nullptr;
+
+    // App orchestrator reference
+    IAppOrchestrator *appOrchestrator = nullptr;
 
     // System services
     PreferencesManager prefs;

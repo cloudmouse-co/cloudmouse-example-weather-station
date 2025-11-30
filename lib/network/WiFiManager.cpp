@@ -14,6 +14,7 @@
 
 #include "./WiFiManager.h"
 #include "../utils/NTPManager.h"
+#include "../utils/Logger.h"
 
 namespace CloudMouse::Network
 {
@@ -33,7 +34,7 @@ namespace CloudMouse::Network
 
     void WiFiManager::init()
     {
-        Serial.println("📶 Initializing WiFiManager...");
+        SDK_LOGGER("📶 Initializing WiFiManager...");
 
         // Register WiFi event handler for state management
         // Handles connection success, failure, and WPS events automatically
@@ -44,15 +45,15 @@ namespace CloudMouse::Network
         // Attempt automatic connection with saved credentials
         if (connectWithSavedCredentials())
         {
-            Serial.println("📶 Attempting connection with saved credentials...");
+            SDK_LOGGER("📶 Attempting connection with saved credentials...");
         }
         else
         {
-            Serial.println("📶 No saved credentials found - setup required");
+            SDK_LOGGER("📶 No saved credentials found - setup required");
             setState(WiFiState::CREDENTIAL_NOT_FOUND);
         }
 
-        Serial.println("✅ WiFiManager initialized successfully");
+        SDK_LOGGER("✅ WiFiManager initialized successfully");
     }
 
     void WiFiManager::update()
@@ -81,11 +82,11 @@ namespace CloudMouse::Network
         // Validate credential presence
         if (savedSSID.isEmpty() || savedPassword.isEmpty())
         {
-            Serial.println("📶 No valid saved credentials found");
+            SDK_LOGGER("📶 No valid saved credentials found");
             return false;
         }
 
-        Serial.printf("📶 Found saved credentials for network: %s\n", savedSSID.c_str());
+        SDK_LOGGER("📶 Found saved credentials for network: %s\n", savedSSID.c_str());
         return connect(savedSSID.c_str(), savedPassword.c_str());
     }
 
@@ -93,11 +94,11 @@ namespace CloudMouse::Network
     {
         if (!initialized)
         {
-            Serial.println("❌ WiFiManager not initialized");
+            SDK_LOGGER("❌ WiFiManager not initialized");
             return false;
         }
 
-        Serial.printf("📶 Initiating connection to WiFi network: %s\n", ssid);
+        SDK_LOGGER("📶 Initiating connection to WiFi network: %s\n", ssid);
 
         // Configure WiFi mode and reset any existing connections
         WiFi.mode(WIFI_STA); // Station mode for client connection
@@ -118,22 +119,22 @@ namespace CloudMouse::Network
 
     void WiFiManager::disconnect()
     {
-        Serial.println("📶 Disconnecting from WiFi network...");
+        SDK_LOGGER("📶 Disconnecting from WiFi network...");
         WiFi.disconnect();
         setState(WiFiState::DISCONNECTED);
     }
 
     void WiFiManager::reconnect()
     {
-        Serial.println("🔄 Attempting WiFi reconnection...");
+        SDK_LOGGER("🔄 Attempting WiFi reconnection...");
 
         if (connectWithSavedCredentials())
         {
-            Serial.println("📶 Reconnection attempt started with saved credentials");
+            SDK_LOGGER("📶 Reconnection attempt started with saved credentials");
         }
         else
         {
-            Serial.println("❌ Reconnection failed - no saved credentials available");
+            SDK_LOGGER("❌ Reconnection failed - no saved credentials available");
             setState(WiFiState::CREDENTIAL_NOT_FOUND);
         }
     }
@@ -145,7 +146,7 @@ namespace CloudMouse::Network
     void WiFiManager::setupAP()
     {
         setState(WiFiState::AP_MODE_INIT);
-        Serial.println("📶 Configuring device as WiFi Access Point...");
+        SDK_LOGGER("📶 Configuring device as WiFi Access Point...");
 
         // Set WiFi mode to Access Point
         WiFi.mode(WIFI_AP);
@@ -160,26 +161,26 @@ namespace CloudMouse::Network
         if (apStarted)
         {
             setState(WiFiState::AP_MODE);
-            Serial.printf("✅ Access Point created successfully\n");
-            Serial.printf("📶 Network Name: %s\n", apSSID.c_str());
-            Serial.printf("📶 Password: %s\n", apPassword.c_str());
-            Serial.printf("📶 IP Address: %s\n", WiFi.softAPIP().toString().c_str());
-            Serial.println("📶 Device ready for configuration via web interface");
+            SDK_LOGGER("✅ Access Point created successfully\n");
+            SDK_LOGGER("📶 Network Name: %s\n", apSSID.c_str());
+            SDK_LOGGER("📶 Password: %s\n", apPassword.c_str());
+            SDK_LOGGER("📶 IP Address: %s\n", WiFi.softAPIP().toString().c_str());
+            SDK_LOGGER("📶 Device ready for configuration via web interface");
         }
         else
         {
-            Serial.println("❌ Failed to create Access Point");
+            SDK_LOGGER("❌ Failed to create Access Point");
             setState(WiFiState::ERROR);
         }
     }
 
     void WiFiManager::stopAP()
     {
-        Serial.println("📶 Stopping Access Point...");
+        SDK_LOGGER("📶 Stopping Access Point...");
 
         // Gracefully disconnect all clients and stop AP
         WiFi.softAPdisconnect(true);
-        Serial.println("✅ Access Point stopped successfully");
+        SDK_LOGGER("✅ Access Point stopped successfully");
     }
 
     bool WiFiManager::hasConnectedDevices()
@@ -196,12 +197,12 @@ namespace CloudMouse::Network
     {
         if (wpsStarted)
         {
-            Serial.println("⚠️ WPS already active");
+            SDK_LOGGER("⚠️ WPS already active");
             return;
         }
 
-        Serial.println("📶 Starting WPS (WiFi Protected Setup)...");
-        Serial.println("📶 Press WPS button on your router within 2 minutes");
+        SDK_LOGGER("📶 Starting WPS (WiFi Protected Setup)...");
+        SDK_LOGGER("📶 Press WPS button on your router within 2 minutes");
 
         // Configure WiFi for station mode
         WiFi.mode(WIFI_STA);
@@ -219,17 +220,17 @@ namespace CloudMouse::Network
     {
         if (!wpsStarted)
         {
-            Serial.println("⚠️ WPS not active");
+            SDK_LOGGER("⚠️ WPS not active");
             return;
         }
 
-        Serial.println("📶 Stopping WPS mode...");
+        SDK_LOGGER("📶 Stopping WPS mode...");
 
         // Disable WPS and return to normal operation
         esp_wifi_wps_disable();
         wpsStarted = false;
 
-        Serial.println("✅ WPS stopped successfully");
+        SDK_LOGGER("✅ WPS stopped successfully");
     }
 
     // ============================================================================
@@ -243,8 +244,8 @@ namespace CloudMouse::Network
         // Check if connection attempt has exceeded timeout
         if (connectionTime > connectionTimeout)
         {
-            Serial.printf("⏰ WiFi connection timeout after %d ms\n", connectionTime);
-            Serial.println("📶 Connection attempt failed - consider AP mode for setup");
+            SDK_LOGGER("⏰ WiFi connection timeout after %d ms\n", connectionTime);
+            SDK_LOGGER("📶 Connection attempt failed - consider AP mode for setup");
             setState(WiFiState::TIMEOUT);
         }
     }
@@ -258,25 +259,25 @@ namespace CloudMouse::Network
             currentState = newState;
 
             // Log state transition with descriptive information
-            Serial.printf("📶 WiFi State Transition: %d → %d\n", (int)oldState, (int)newState);
+            SDK_LOGGER("📶 WiFi State Transition: %d → %d\n", (int)oldState, (int)newState);
 
             // Additional state-specific logging
             switch (newState)
             {
             case WiFiState::CONNECTING:
-                Serial.println("📶 Status: Attempting WiFi connection...");
+                SDK_LOGGER("📶 Status: Attempting WiFi connection...");
                 break;
             case WiFiState::CONNECTED:
-                Serial.println("📶 Status: WiFi connection established");
+                SDK_LOGGER("📶 Status: WiFi connection established");
                 break;
             case WiFiState::TIMEOUT:
-                Serial.println("📶 Status: Connection timeout - setup required");
+                SDK_LOGGER("📶 Status: Connection timeout - setup required");
                 break;
             case WiFiState::AP_MODE:
-                Serial.println("📶 Status: Access Point mode active");
+                SDK_LOGGER("📶 Status: Access Point mode active");
                 break;
             case WiFiState::DISCONNECTED:
-                Serial.println("📶 Status: WiFi disconnected");
+                SDK_LOGGER("📶 Status: WiFi disconnected");
                 break;
             default:
                 break;
@@ -288,7 +289,7 @@ namespace CloudMouse::Network
     {
         // Save credentials to encrypted NVS storage for future use
         prefs.saveWiFiCredentials(ssid, password);
-        Serial.printf("💾 WiFi credentials saved for network: %s\n", ssid.c_str());
+        SDK_LOGGER("💾 WiFi credentials saved for network: %s\n", ssid.c_str());
     }
 
     // ============================================================================
@@ -355,7 +356,7 @@ namespace CloudMouse::Network
         // Ensure static instance is available for event processing
         if (!staticInstance)
         {
-            Serial.println("⚠️ WiFi event received but no WiFiManager instance available");
+            SDK_LOGGER("⚠️ WiFi event received but no WiFiManager instance available");
             return;
         }
 
@@ -364,11 +365,11 @@ namespace CloudMouse::Network
         {
         case ARDUINO_EVENT_WIFI_STA_GOT_IP:
             // Connection successful - IP address assigned
-            Serial.println("✅ WiFi connection successful!");
-            Serial.printf("📶 IP Address: %s\n", WiFi.localIP().toString().c_str());
-            Serial.printf("📶 Gateway: %s\n", WiFi.gatewayIP().toString().c_str());
-            Serial.printf("📶 DNS: %s\n", WiFi.dnsIP().toString().c_str());
-            Serial.printf("📶 Signal Strength: %d dBm\n", WiFi.RSSI());
+            SDK_LOGGER("✅ WiFi connection successful!");
+            SDK_LOGGER("📶 IP Address: %s\n", WiFi.localIP().toString().c_str());
+            SDK_LOGGER("📶 Gateway: %s\n", WiFi.gatewayIP().toString().c_str());
+            SDK_LOGGER("📶 DNS: %s\n", WiFi.dnsIP().toString().c_str());
+            SDK_LOGGER("📶 Signal Strength: %d dBm\n", WiFi.RSSI());
 
             // Save successful credentials for future use
             staticInstance->saveCredentials(WiFi.SSID(), WiFi.psk());
@@ -378,31 +379,31 @@ namespace CloudMouse::Network
             delay(1000);
 
             // Initialize NTP time synchronization
-            Serial.println("⏰ Initializing network time synchronization...");
+            SDK_LOGGER("⏰ Initializing network time synchronization...");
             CloudMouse::Utils::NTPManager::init();
             break;
 
         case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
             // Connection lost or failed
-            Serial.println("📶 WiFi connection lost");
+            SDK_LOGGER("📶 WiFi connection lost");
 
             if (staticInstance->currentState == WiFiState::CONNECTING)
             {
                 // Timeout will be handled by handleConnectionTimeout()
-                Serial.println("📶 Connection attempt failed - timeout monitoring active");
+                SDK_LOGGER("📶 Connection attempt failed - timeout monitoring active");
             }
             else
             {
                 // Unexpected disconnection from established connection
-                Serial.println("📶 Unexpected disconnection - attempting automatic reconnection");
+                SDK_LOGGER("📶 Unexpected disconnection - attempting automatic reconnection");
                 staticInstance->setState(WiFiState::DISCONNECTED);
             }
             break;
 
         case ARDUINO_EVENT_WPS_ER_SUCCESS:
             // WPS configuration successful
-            Serial.println("✅ WPS configuration successful!");
-            Serial.println("📶 Credentials received via WPS - attempting connection");
+            SDK_LOGGER("✅ WPS configuration successful!");
+            SDK_LOGGER("📶 Credentials received via WPS - attempting connection");
 
             staticInstance->stopWPS();
             staticInstance->setState(WiFiState::WPS_SUCCESS);
@@ -414,8 +415,8 @@ namespace CloudMouse::Network
         case ARDUINO_EVENT_WPS_ER_FAILED:
         case ARDUINO_EVENT_WPS_ER_TIMEOUT:
             // WPS failed or timed out
-            Serial.println("❌ WPS configuration failed or timed out");
-            Serial.println("📶 Consider manual configuration via Access Point mode");
+            SDK_LOGGER("❌ WPS configuration failed or timed out");
+            SDK_LOGGER("📶 Consider manual configuration via Access Point mode");
 
             staticInstance->stopWPS();
             staticInstance->setState(WiFiState::WPS_FAILED);
@@ -423,7 +424,7 @@ namespace CloudMouse::Network
 
         default:
             // Other WiFi events (informational only)
-            Serial.printf("📶 WiFi Event: %d\n", event);
+            SDK_LOGGER("📶 WiFi Event: %d\n", event);
             break;
         }
     }

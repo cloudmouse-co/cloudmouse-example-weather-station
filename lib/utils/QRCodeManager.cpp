@@ -34,14 +34,14 @@ namespace CloudMouse::Utils
     {
         if (!sprite)
         {
-            Serial.println("❌ QRCodeManager: Sprite not initialized");
+            SDK_LOGGER("❌ QRCodeManager: Sprite not initialized");
             valid = false;
             return;
         }
 
         if (!content || strlen(content) == 0)
         {
-            Serial.println("❌ QRCodeManager: Empty content provided");
+            SDK_LOGGER("❌ QRCodeManager: Empty content provided");
             valid = false;
             return;
         }
@@ -54,14 +54,14 @@ namespace CloudMouse::Utils
 
         if (result != 0)
         {
-            Serial.printf("❌ QRCodeManager: Failed to generate QR code (error: %d)\n", result);
+            SDK_LOGGER("❌ QRCodeManager: Failed to generate QR code (error: %d)\n", result);
             valid = false;
             return;
         }
 
         valid = true;
 
-        Serial.printf("✅ QRCodeManager: Generated QR code %dx%d for content length %d\n",
+        SDK_LOGGER("✅ QRCodeManager: Generated QR code %dx%d for content length %d\n",
                       qrcode.size, qrcode.size, strlen(content));
 
         // Render to sprite

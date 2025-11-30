@@ -105,11 +105,15 @@ Install the following libraries via Arduino Library Manager:
 #ifndef LV_CONF_H
 #define LV_CONF_H
 
+#define LV_USE_PERF_MONITOR 1
+#define LV_USE_MEM_MONITOR 1
+
 #define LV_COLOR_DEPTH 16
 #define LV_COLOR_16_SWAP 1
 #define LV_MEM_SIZE (48U * 1024U)
 
 // Enable required fonts
+#define LV_FONT_MONTSERRAT_12 1
 #define LV_FONT_MONTSERRAT_14 1
 #define LV_FONT_MONTSERRAT_16 1
 #define LV_FONT_MONTSERRAT_20 1

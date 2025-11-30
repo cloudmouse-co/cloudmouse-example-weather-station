@@ -15,7 +15,7 @@ namespace CloudMouse
 
   void Core::initialize()
   {
-    Serial.println("🚀 Core initialization starting...");
+    SDK_LOGGER("🚀 Core initialization starting...");
 
     // Output device identification
     DeviceID::printDeviceInfo();
@@ -23,18 +23,23 @@ namespace CloudMouse
     // Initialize event communication system
     EventBus::instance().initialize();
 
+    // Initialize app orchestrator
+    if (appOrchestrator) {
+      appOrchestrator->initialize();
+    }
+
     // Start system in booting state (shows LED animation)
     setState(SystemState::BOOTING);
 
-    Serial.println("🎬 Boot sequence started - LED animation active");
-    Serial.println("✅ Core initialized successfully");
+    SDK_LOGGER("🎬 Boot sequence started - LED animation active");
+    SDK_LOGGER("✅ Core initialized successfully");
   }
 
   void Core::startUITask()
   {
     if (uiTaskHandle != nullptr)
     {
-      Serial.println("🎮 UI Task already running");
+      SDK_LOGGER("🎮 UI Task already running");
       return;
     }
 
@@ -51,7 +56,7 @@ namespace CloudMouse
 
     if (uiTaskHandle)
     {
-      Serial.println("✅ UI Task running on Core 1 (30Hz)");
+      SDK_LOGGER("✅ UI Task running on Core 1 (30Hz)");
 
       // Start LED animation system
       if (ledManager)
@@ -62,7 +67,7 @@ namespace CloudMouse
     else
     {
       setState(SystemState::ERROR);
-      Serial.println("❌ Failed to start UI Task!");
+      SDK_LOGGER("❌ Failed to start UI Task!");
     }
   }
 
@@ -70,12 +75,14 @@ namespace CloudMouse
   {
     if (currentState != SystemState::READY)
     {
-      Serial.println("❌ Core not ready to start!");
+      SDK_LOGGER("❌ Core not ready to start!");
       return;
     }
 
+    // ledManager->setRainbowState(true, 2);
+
     setState(SystemState::RUNNING);
-    Serial.println("✅ System started - CloudMouse RUNNING");
+    SDK_LOGGER("✅ System started - CloudMouse RUNNING");
   }
 
   // ============================================================================
@@ -86,7 +93,7 @@ namespace CloudMouse
   {
     if (currentState != state)
     {
-      Serial.printf("🔄 State transition: %d → %d\n", (int)currentState, (int)state);
+      SDK_LOGGER("🔄 State transition: %d → %d\n", (int)currentState, (int)state);
       currentState = state;
       stateStartTime = millis();
     }
@@ -127,6 +134,11 @@ namespace CloudMouse
     if (weatherService && currentState == SystemState::RUNNING) {
         weatherService->update();
     }
+    
+    // update loop for app orchestrator
+    if (appOrchestrator) {
+      appOrchestrator->update();
+    }
 
     // Process user commands and system events
     processSerialCommands();
@@ -153,19 +165,24 @@ namespace CloudMouse
     {
       setState(SystemState::INITIALIZING);
 
-      #if WIFI_REQUIRED
-            Serial.println("📡 WiFi required - starting connection process");
+#if WIFI_REQUIRED
+      SDK_LOGGER("📡 WiFi required - starting connection process");
 
-            if (wifi)
-            {
-              EventBus::instance().sendToUI(Event(EventType::DISPLAY_WIFI_CONNECTING));
-              wifi->init();
-            }
-      #else
-            Serial.println("📡 WiFi optional - ready for operation");
-            EventBus::instance().sendToUI(Event(EventType::DISPLAY_WAKE_UP));
-            setState(SystemState::READY);
-      #endif
+      if (wifi)
+      {
+        EventBus::instance().sendToUI(Event(EventType::DISPLAY_WIFI_CONNECTING));
+        wifi->init();
+      }
+#else
+      SDK_LOGGER("📡 WiFi optional - ready for operation");
+      EventBus::instance().sendToUI(Event(EventType::DISPLAY_WAKE_UP));
+      setState(SystemState::READY);
+#endif
+
+      if (appOrchestrator) {
+        Event bootingCompleted(EventType::BOOTING_COMPLETE);
+        appOrchestrator->processSDKEvent(bootingCompleted);
+      }
     }
   }
 
@@ -186,21 +203,27 @@ namespace CloudMouse
       switch (currentWiFiState)
       {
       case WiFiManager::WiFiState::CONNECTING:
-        Serial.println("📡 WiFi: Attempting connection...");
+        SDK_LOGGER("📡 WiFi: Attempting connection...");
         setState(SystemState::WIFI_CONNECTING);
         // Visual feedback: loading state
         if (ledManager)
         {
           ledManager->setLoadingState(true);
         }
+
+        // Sending wifi connecting event to the app orchestrator
+        if (appOrchestrator) {
+          Event wifiConnected(EventType::WIFI_CONNECTING);
+          appOrchestrator->processSDKEvent(wifiConnected);
+        }
         break;
 
       case WiFiManager::WiFiState::CONNECTED:
       {
-        Serial.println("✅ WiFi: Connected successfully!");
+        SDK_LOGGER("✅ WiFi: Connected successfully!");
         String ssid = wifi->getSSID();
         String ip = wifi->getLocalIP();
-        Serial.printf("   Network: %s, IP: %s\n", ssid.c_str(), ip.c_str());
+        SDK_LOGGER("   Network: %s, IP: %s\n", ssid.c_str(), ip.c_str());
 
         // Visual feedback: green LED flash
         if (ledManager)
@@ -225,7 +248,13 @@ namespace CloudMouse
             Event helloEvent(EventType::DISPLAY_WAKE_UP);
             EventBus::instance().sendToUI(helloEvent);
         }
-        
+
+        // Sending wifi connected event to the app orchestrator
+        if (appOrchestrator) {
+          Event wifiConnected(EventType::WIFI_CONNECTED);
+          appOrchestrator->processSDKEvent(wifiConnected);
+        }
+
         setState(SystemState::READY);
       }
       break;
@@ -233,7 +262,13 @@ namespace CloudMouse
       case WiFiManager::WiFiState::CREDENTIAL_NOT_FOUND:
       case WiFiManager::WiFiState::TIMEOUT:
       case WiFiManager::WiFiState::ERROR:
-        Serial.println("❌ WiFi: Connection failed - starting setup mode");
+        SDK_LOGGER("❌ WiFi: Connection failed - starting setup mode");
+
+        // Sending wifi disconnected event to the app orchestrator
+        if (appOrchestrator) {
+          Event wifiConnected(EventType::WIFI_DISCONNECTED);
+          appOrchestrator->processSDKEvent(wifiConnected);
+        }
 
         if (wifi)
         {
@@ -242,7 +277,7 @@ namespace CloudMouse
         break;
 
       case WiFiManager::WiFiState::AP_MODE:
-        Serial.println("📱 WiFi: Access Point mode active");
+        SDK_LOGGER("📱 WiFi: Access Point mode active");
         setState(SystemState::WIFI_AP_MODE);
 
         if (webServer)
@@ -251,8 +286,8 @@ namespace CloudMouse
           String apIP = wifi->getAPIP();
           String apSSID = wifi->getSSID();
 
-          Serial.printf("   AP Name: %s\n", apSSID.c_str());
-          Serial.printf("   Setup URL: http://%s\n", apIP.c_str());
+          SDK_LOGGER("   AP Name: %s\n", apSSID.c_str());
+          SDK_LOGGER("   Setup URL: http://%s\n", apIP.c_str());
 
           // Show AP setup screen with QR code
           Event apEvent(EventType::DISPLAY_WIFI_AP_MODE);
@@ -280,7 +315,7 @@ namespace CloudMouse
 
       if (clientIsConnected && !clientWasConnected)
       {
-        Serial.println("📱 Client connected - showing setup instructions");
+        SDK_LOGGER("📱 Client connected - showing setup instructions");
 
         String setupURL = "http://" + wifi->getAPIP() + "/setup";
 
@@ -313,6 +348,10 @@ namespace CloudMouse
     {
       eventsProcessed++;
 
+      if (appOrchestrator) {
+        appOrchestrator->processSDKEvent(event);
+      }
+
       switch (event.type)
       {
       case EventType::ENCODER_ROTATION:
@@ -336,7 +375,7 @@ namespace CloudMouse
 
   void Core::handleEncoderRotation(const Event &event)
   {
-    Serial.printf("🔄 Encoder rotation: %d steps\n", event.value);
+    SDK_LOGGER("🔄 Encoder rotation: %d steps\n", event.value);
 
     // Activate LED feedback
     if (ledManager)
@@ -350,7 +389,7 @@ namespace CloudMouse
 
   void Core::handleEncoderClick(const Event &event)
   {
-    Serial.println("🖱️ Encoder clicked!");
+    SDK_LOGGER("🖱️ Encoder clicked!");
 
     // Visual feedback: green LED flash
     if (ledManager)
@@ -367,7 +406,7 @@ namespace CloudMouse
 
   void Core::handleEncoderLongPress(const Event &event)
   {
-    Serial.println("⏱️ Encoder long press detected!");
+    SDK_LOGGER("⏱️ Encoder long press detected!");
 
     // Visual feedback: orange LED flash
     if (ledManager)
@@ -396,7 +435,7 @@ namespace CloudMouse
   {
     TickType_t lastWake = xTaskGetTickCount();
 
-    Serial.println("🎮 UI Task started on Core 1");
+    SDK_LOGGER("🎮 UI Task started on Core 1");
 
     while (true)
     {
@@ -448,7 +487,7 @@ namespace CloudMouse
     uint32_t freeHeap = ESP.getFreeHeap();
     uint32_t minFreeHeap = ESP.getMinFreeHeap();
 
-    Serial.printf("🏥 Health: Free=%d, Min=%d, Tasks=%d, Cycles=%d, Events=%d\n",
+    SDK_LOGGER("🏥 Health: Free=%d, Min=%d, Tasks=%d, Cycles=%d, Events=%d\n",
                   freeHeap, minFreeHeap, uxTaskGetNumberOfTasks(),
                   coordinationCycles, eventsProcessed);
 
@@ -456,19 +495,19 @@ namespace CloudMouse
     if (uiTaskHandle)
     {
       UBaseType_t uiStack = uxTaskGetStackHighWaterMark(uiTaskHandle);
-      Serial.printf("🎮 UI Task stack remaining: %d bytes\n", uiStack * sizeof(StackType_t));
+      SDK_LOGGER("🎮 UI Task stack remaining: %d bytes\n", uiStack * sizeof(StackType_t));
     }
 
     // Monitor LED task stack usage
     if (ledManager && ledManager->getAnimationTaskHandle())
     {
       UBaseType_t ledStack = uxTaskGetStackHighWaterMark(ledManager->getAnimationTaskHandle());
-      Serial.printf("💡 LED Task stack remaining: %d bytes\n", ledStack * sizeof(StackType_t));
+      SDK_LOGGER("💡 LED Task stack remaining: %d bytes\n", ledStack * sizeof(StackType_t));
 
       // Auto-restart LED task if stack is critically low
       if (ledStack < 512)
       {
-        Serial.println("⚠️ LED Task stack critically low - restarting");
+        SDK_LOGGER("⚠️ LED Task stack critically low - restarting");
         ledManager->restartAnimationTask();
       }
     }
@@ -479,7 +518,7 @@ namespace CloudMouse
     // Memory warning
     if (freeHeap < 50000)
     {
-      Serial.println("⚠️ LOW MEMORY WARNING!");
+      SDK_LOGGER("⚠️ LOW MEMORY WARNING!");
     }
   }
 
@@ -504,7 +543,7 @@ namespace CloudMouse
           commandBuffer.trim();
           commandBuffer.toLowerCase();
 
-          Serial.printf("\n💬 Command: '%s'\n", commandBuffer.c_str());
+          SDK_LOGGER("\n💬 Command: '%s'\n", commandBuffer.c_str());
 
           // Device information query
           if (commandBuffer == "get uuid")
@@ -513,23 +552,23 @@ namespace CloudMouse
             String deviceId = GET_DEVICE_ID();
             String mac = DeviceID::getMACAddress();
 
-            Serial.println("\n📱 DEVICE_INFO_START");
-            Serial.println("{");
-            Serial.printf("  \"uuid\": \"%s\",\n", uuid.c_str());
-            Serial.printf("  \"device_id\": \"%s\",\n", deviceId.c_str());
-            Serial.printf("  \"mac_address\": \"%s\",\n", mac.c_str());
-            Serial.printf("  \"pcb_version\": %d,\n", PCB_VERSION);
-            Serial.printf("  \"firmware_version\": \"%s\",\n", FIRMWARE_VERSION);
-            Serial.printf("  \"chip_model\": \"%s\",\n", ESP.getChipModel());
-            Serial.printf("  \"chip_revision\": %d\n", ESP.getChipRevision());
-            Serial.println("}");
-            Serial.println("📱 DEVICE_INFO_END\n");
+            SDK_LOGGER("\n📱 DEVICE_INFO_START");
+            SDK_LOGGER("{");
+            SDK_LOGGER("  \"uuid\": \"%s\",\n", uuid.c_str());
+            SDK_LOGGER("  \"device_id\": \"%s\",\n", deviceId.c_str());
+            SDK_LOGGER("  \"mac_address\": \"%s\",\n", mac.c_str());
+            SDK_LOGGER("  \"pcb_version\": %d,\n", PCB_VERSION);
+            SDK_LOGGER("  \"firmware_version\": \"%s\",\n", FIRMWARE_VERSION);
+            SDK_LOGGER("  \"chip_model\": \"%s\",\n", ESP.getChipModel());
+            SDK_LOGGER("  \"chip_revision\": %d\n", ESP.getChipRevision());
+            SDK_LOGGER("}");
+            SDK_LOGGER("📱 DEVICE_INFO_END\n");
 
             // System restart
           }
           else if (commandBuffer == "reboot")
           {
-            Serial.println("🔄 Rebooting CloudMouse...");
+            SDK_LOGGER("🔄 Rebooting CloudMouse...");
             Serial.flush();
             delay(500);
             ESP.restart();
@@ -538,10 +577,10 @@ namespace CloudMouse
           }
           else if (commandBuffer == "hard reset")
           {
-            Serial.println("🗑️ Factory reset - clearing all settings...");
+            SDK_LOGGER("🗑️ Factory reset - clearing all settings...");
             prefs.clearAll();
-            Serial.println("✅ Settings cleared!");
-            Serial.println("🔄 Rebooting...");
+            SDK_LOGGER("✅ Settings cleared!");
+            SDK_LOGGER("🔄 Rebooting...");
             Serial.flush();
             delay(500);
             ESP.restart();
@@ -550,40 +589,40 @@ namespace CloudMouse
           }
           else if (commandBuffer == "help")
           {
-            Serial.println("\n📋 CloudMouse Commands:");
-            Serial.println("  reboot      - Restart the device");
-            Serial.println("  hard reset  - Factory reset (clear all settings)");
-            Serial.println("  status      - Show system information");
-            Serial.println("  get uuid    - Get device identification");
-            Serial.println("  help        - Show this help\n");
+            SDK_LOGGER("\n📋 CloudMouse Commands:");
+            SDK_LOGGER("  reboot      - Restart the device");
+            SDK_LOGGER("  hard reset  - Factory reset (clear all settings)");
+            SDK_LOGGER("  status      - Show system information");
+            SDK_LOGGER("  get uuid    - Get device identification");
+            SDK_LOGGER("  help        - Show this help\n");
 
             // System status
           }
           else if (commandBuffer == "status")
           {
-            Serial.println("\n📊 CloudMouse Status:");
-            Serial.printf("  State: %d\n", (int)currentState);
-            Serial.printf("  Uptime: %lu seconds\n", millis() / 1000);
-            Serial.printf("  Free Heap: %d bytes\n", ESP.getFreeHeap());
-            Serial.printf("  Free PSRAM: %d bytes\n", ESP.getFreePsram());
-            Serial.printf("  Coordination Cycles: %d\n", coordinationCycles);
-            Serial.printf("  Events Processed: %d\n", eventsProcessed);
+            SDK_LOGGER("\n📊 CloudMouse Status:");
+            SDK_LOGGER("  State: %d\n", (int)currentState);
+            SDK_LOGGER("  Uptime: %lu seconds\n", millis() / 1000);
+            SDK_LOGGER("  Free Heap: %d bytes\n", ESP.getFreeHeap());
+            SDK_LOGGER("  Free PSRAM: %d bytes\n", ESP.getFreePsram());
+            SDK_LOGGER("  Coordination Cycles: %d\n", coordinationCycles);
+            SDK_LOGGER("  Events Processed: %d\n", eventsProcessed);
             if (wifi)
             {
-              Serial.printf("  WiFi State: %d\n", (int)wifi->getState());
+              SDK_LOGGER("  WiFi State: %d\n", (int)wifi->getState());
               if (wifi->isConnected())
               {
-                Serial.printf("  Network: %s\n", wifi->getSSID().c_str());
-                Serial.printf("  IP Address: %s\n", wifi->getLocalIP().c_str());
-                Serial.printf("  Signal: %d dBm\n", wifi->getRSSI());
+                SDK_LOGGER("  Network: %s\n", wifi->getSSID().c_str());
+                SDK_LOGGER("  IP Address: %s\n", wifi->getLocalIP().c_str());
+                SDK_LOGGER("  Signal: %d dBm\n", wifi->getRSSI());
               }
             }
-            Serial.println();
+            SDK_LOGGER("");
           }
           else
           {
-            Serial.printf("❌ Unknown command: '%s'\n", commandBuffer.c_str());
-            Serial.println("   Type 'help' for available commands\n");
+            SDK_LOGGER("❌ Unknown command: '%s'\n", commandBuffer.c_str());
+            SDK_LOGGER("   Type 'help' for available commands\n");
           }
 
           commandBuffer = "";

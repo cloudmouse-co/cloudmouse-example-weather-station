@@ -41,7 +41,7 @@ namespace CloudMouse::Utils
             // Handle parsing errors
             if (error)
             {
-                Serial.printf("❌ JSON parsing error: %s\n", error.c_str());
+                SDK_LOGGER("❌ JSON parsing error: %s\n", error.c_str());
                 return DynamicJsonDocument(0); // Return empty document on error
             }
 

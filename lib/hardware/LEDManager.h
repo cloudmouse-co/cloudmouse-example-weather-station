@@ -31,7 +31,8 @@ namespace CloudMouse::Hardware
         FLASH_COLOR,   // Trigger color flash with duration
         ACTIVATE,      // Activate LEDs on user interaction
         SET_COLOR,     // Change base color theme
-        SET_BRIGHTNESS // Adjust global brightness
+        SET_BRIGHTNESS, // Adjust global brightness
+        SET_RAINBOW
     };
 
     /**
@@ -73,6 +74,7 @@ namespace CloudMouse::Hardware
 
         // Public interface (thread-safe)
         void setLoadingState(bool on); // Control loading animation state
+        void setRainbowState(bool on, uint8_t wait_ms = 20);
         void flashColor(uint8_t r, uint8_t g, uint8_t b, int brightness, int duration);
         void activate();                                 // Trigger activation animation
         void updateLastEncoderMovementTime();            // Update activity timestamp
@@ -104,6 +106,9 @@ namespace CloudMouse::Hardware
         bool fading = false;                 // Brightness fade active
         bool inited = false;                 // Boot sequence completed
         bool initAnimationCompleted = false; // Full init sequence done
+
+        bool rainbow = false;
+        uint16_t rainbowPosition = 0;
 
         // Timing variables
         unsigned long previousMillis = 0;
@@ -142,11 +147,13 @@ namespace CloudMouse::Hardware
         void updatePulsatingAnimation(); // Idle breathing animation
         void updateFlashAnimation();     // Flash effect timing
         void updateFadeAnimation();      // Brightness fade transitions
+        void updateRainbowAnimation();
 
         // Helper functions
         void resetAllLEDs();                                 // Turn off all LEDs
         void setAllLEDs(uint8_t r, uint8_t g, uint8_t b);    // Set all LEDs to color
         void fadeToBrightness(int brightness, int duration); // Start brightness fade
+        uint32_t Wheel(byte WheelPos);
 
         // Communication
         bool sendLEDEvent(const LEDEvent &event); // Send event to animation task

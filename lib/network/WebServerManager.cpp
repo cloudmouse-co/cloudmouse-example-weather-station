@@ -7,6 +7,7 @@
 
 #include "./WebServerManager.h"
 #include "../prefs/PreferencesManager.h"
+#include "../utils/Logger.h"
 
 namespace CloudMouse::Network
 {
@@ -22,7 +23,7 @@ namespace CloudMouse::Network
 
     void WebServerManager::init()
     {
-        Serial.println("🌐 Initializing WebServer...");
+        SDK_LOGGER("🌐 Initializing WebServer...");
 
         // Scan for available WiFi networks to populate selection list
         scanNetworks();
@@ -36,8 +37,8 @@ namespace CloudMouse::Network
         webServer.begin();
         serverRunning = true;
 
-        Serial.println("✅ WebServer started on port 80");
-        Serial.println("🌐 Access configuration at: http://192.168.4.1");
+        SDK_LOGGER("✅ WebServer started on port 80");
+        SDK_LOGGER("🌐 Access configuration at: http://192.168.4.1");
     }
 
     void WebServerManager::update()
@@ -51,12 +52,12 @@ namespace CloudMouse::Network
     {
         webServer.stop();
         serverRunning = false;
-        Serial.println("🌐 WebServer stopped");
+        SDK_LOGGER("🌐 WebServer stopped");
     }
 
     void WebServerManager::scanNetworks()
     {
-        Serial.println("🔍 Scanning WiFi networks...");
+        SDK_LOGGER("🔍 Scanning WiFi networks...");
 
         // Perform WiFi network scan
         int networkCount = WiFi.scanNetworks();
@@ -70,7 +71,7 @@ namespace CloudMouse::Network
             networkList += "</option>";
         }
 
-        Serial.printf("✅ Found %d networks\n", networkCount);
+        SDK_LOGGER("✅ Found %d networks\n", networkCount);
     }
 
     String WebServerManager::generateConfigPage()
@@ -251,7 +252,7 @@ namespace CloudMouse::Network
             String ssid = instance->webServer.arg("ssid");
             String password = instance->webServer.arg("password");
 
-            Serial.printf("🌐 WiFi credentials received: %s\n", ssid.c_str());
+            SDK_LOGGER("🌐 WiFi credentials received: %s\n", ssid.c_str());
 
             // Generate immediate success response for user feedback
             String successPage = R"rawliteral(
@@ -307,7 +308,7 @@ namespace CloudMouse::Network
         else
         {
             // Handle missing form data
-            Serial.println("❌ Invalid form submission - missing SSID or password");
+            SDK_LOGGER("❌ Invalid form submission - missing SSID or password");
             instance->webServer.send(400, "text/plain", "Error: Missing SSID or password");
         }
     }

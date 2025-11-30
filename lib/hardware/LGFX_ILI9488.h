@@ -56,6 +56,7 @@
 
 #include <LovyanGFX.hpp>
 #include "../config/DeviceConfig.h"
+#include "../utils/Logger.h"
 
 // Hardware pin definitions
 #define TFT_BL 8    // PWM backlight control pin
@@ -256,16 +257,16 @@ public:
             if (PCB_VERSION == 4) {
                 // PCB v4: Inverted power logic (LOW = enabled)
                 digitalWrite(TFT_PWR, LOW);
-                Serial.println("🔌 Display power enabled (PCB v4 - inverted logic)");
+                SDK_LOGGER("🔌 Display power enabled (PCB v4 - inverted logic)");
             }
             
             if (PCB_VERSION == 5) {
                 // PCB v5: Normal power logic (HIGH = enabled)
                 digitalWrite(TFT_PWR, HIGH);
-                Serial.println("🔌 Display power enabled (PCB v5 - normal logic)");
+                SDK_LOGGER("🔌 Display power enabled (PCB v5 - normal logic)");
             }
         } else {
-            Serial.println("⚠️ Display power pin not configured");
+            SDK_LOGGER("⚠️ Display power pin not configured");
         }
 
         // ====================================================================
@@ -284,12 +285,12 @@ public:
         // Set moderate brightness for initial setup (40% of maximum)
         setBrightness(100);
         
-        Serial.println("✅ ILI9488 display initialized successfully");
-        Serial.printf("   Resolution: 480x320 pixels\n");
-        Serial.printf("   Color depth: 16-bit RGB565\n");
-        Serial.printf("   SPI frequency: 40MHz write, 16MHz read\n");
-        Serial.printf("   PWM backlight: 5KHz @ channel 7\n");
-        Serial.printf("   Power management: PCB v%d compatible\n", PCB_VERSION);
+        SDK_LOGGER("✅ ILI9488 display initialized successfully");
+        SDK_LOGGER("   Resolution: 480x320 pixels\n");
+        SDK_LOGGER("   Color depth: 16-bit RGB565\n");
+        SDK_LOGGER("   SPI frequency: 40MHz write, 16MHz read\n");
+        SDK_LOGGER("   PWM backlight: 5KHz @ channel 7\n");
+        SDK_LOGGER("   Power management: PCB v%d compatible\n", PCB_VERSION);
     }
 };
 

@@ -133,17 +133,17 @@ namespace CloudMouse::Utils
         // Print comprehensive device information
         static void printDeviceInfo()
         {
-            Serial.println("\n📱 Device Information:");
-            Serial.printf("   Device ID: %s\n", getDeviceID().c_str());
-            Serial.printf("   Device UUID: %s\n", getDeviceUUID().c_str());
-            Serial.printf("   MAC Address: %s\n", getMACAddress().c_str());
-            Serial.printf("   AP SSID: %s\n", getAPSSID().c_str());
-            Serial.printf("   AP Password: %s\n", getAPPassword().c_str());
-            Serial.printf("   AP Password (Secure): %s\n", getAPPasswordSecure().c_str());
-            Serial.printf("   Chip Model: %s\n", ESP.getChipModel());
-            Serial.printf("   Chip Revision: %d\n", ESP.getChipRevision());
-            Serial.printf("   CPU Frequency: %d MHz\n", ESP.getCpuFreqMHz());
-            Serial.println();
+            Serial.printf("\n[SDK] 📱 Device Information:");
+            Serial.printf("[SDK]   Device ID: %s\n", getDeviceID().c_str());
+            Serial.printf("[SDK]   Device UUID: %s\n", getDeviceUUID().c_str());
+            Serial.printf("[SDK]   MAC Address: %s\n", getMACAddress().c_str());
+            Serial.printf("[SDK]   AP SSID: %s\n", getAPSSID().c_str());
+            Serial.printf("[SDK]   AP Password: %s\n", getAPPassword().c_str());
+            Serial.printf("[SDK]   AP Password (Secure): %s\n", getAPPasswordSecure().c_str());
+            Serial.printf("[SDK]   Chip Model: %s\n", ESP.getChipModel());
+            Serial.printf("[SDK]   Chip Revision: %d\n", ESP.getChipRevision());
+            Serial.printf("[SDK]   CPU Frequency: %d MHz\n", ESP.getCpuFreqMHz());
+            Serial.printf("");
         }
     };
 };

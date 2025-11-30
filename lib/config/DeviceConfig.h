@@ -66,8 +66,8 @@ namespace CloudMouse
  *
  * IMPORTANT: Verify PCB version before deployment to prevent hardware damage
  */
-#define PCB_VERSION 4 // Current hardware: PCB version 4
-// #define PCB_VERSION 5        // Uncomment for PCB version 5 hardware
+// #define PCB_VERSION 4 // Current hardware: PCB version 4
+#define PCB_VERSION 5        // Uncomment for PCB version 5 hardware
 
 // ============================================================================
 // FIRMWARE VERSION MANAGEMENT
@@ -235,6 +235,37 @@ namespace CloudMouse
  * - Used for BLE connection setup
  */
 #define DEVICE_MANUFACTURER "Cloudmouse"
+
+// ============================================================================
+// DEBUGGING CONFIGURATION
+// ============================================================================
+
+/**
+ * Show LVGL performance monitor
+ * 
+ * If true a performance monitor will be showed on the top right corner of display
+ * showing FPS and CPU usage.
+ * 
+ * Applications:
+ * - Used for checking animations and UI performance
+ */
+#define SHOW_LVGL_PERFORMANCE_MONITOR true
+
+/**
+ * APP logging flag
+ * 
+ * if `true` APP_LOGGER() logging is enabled with [APP] namespace
+ * if `false` or not defined, APP_LOGGER() is disabled.
+ */
+#define APP_DEBUGGER_ACTIVE true
+
+/**
+ * SDK logging flag
+ * 
+ * if `true` SDK_LOGGER("") logging is enabled with [SDK] namespace
+ * if `false` or not defined, SDK_LOGGER("") is disabled.
+ */
+#define SDK_DEBUGGER_ACTIVE true
 
 // ============================================================================
 // CONFIGURATION VALIDATION

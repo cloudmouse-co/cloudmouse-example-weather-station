@@ -25,6 +25,7 @@
  */
 
 #include "./EncoderManager.h"
+#include "../utils/Logger.h"
 
 namespace CloudMouse::Hardware
 {
@@ -41,7 +42,7 @@ namespace CloudMouse::Hardware
 
     void EncoderManager::init()
     {
-        Serial.println("🎮 Initializing EncoderManager...");
+        SDK_LOGGER("🎮 Initializing EncoderManager...");
 
         // Configure button pin with internal pull-up resistor
         // Button connects SW pin to ground when pressed (active LOW)
@@ -59,10 +60,10 @@ namespace CloudMouse::Hardware
         // Ensures proper state tracking from startup
         lastButtonState = digitalRead(ENCODER_SW_PIN);
 
-        Serial.printf("✅ EncoderManager initialized successfully\n");
-        Serial.printf("🎮 Pin configuration: CLK=%d, DT=%d, SW=%d\n",
+        SDK_LOGGER("✅ EncoderManager initialized successfully\n");
+        SDK_LOGGER("🎮 Pin configuration: CLK=%d, DT=%d, SW=%d\n",
                       ENCODER_CLK_PIN, ENCODER_DT_PIN, ENCODER_SW_PIN);
-        Serial.printf("🎮 Initial encoder position: %d\n", lastValue);
+        SDK_LOGGER("🎮 Initial encoder position: %d\n", lastValue);
     }
 
     // ============================================================================
@@ -98,7 +99,7 @@ namespace CloudMouse::Hardware
             movementPending = true;
 
             // Optional debug logging for development and troubleshooting
-            // Serial.printf("🔄 Encoder movement: %d (total pending: %d)\n", delta, movement);
+            // SDK_LOGGER("🔄 Encoder movement: %d (total pending: %d)\n", delta, movement);
         }
     }
 
@@ -123,7 +124,7 @@ namespace CloudMouse::Hardware
             longPressBuzzed = false;        // Reset buzzer flag for new press
             ultraLongPressNotified = false; // Reset ultra-long press flag
 
-            Serial.println("👆 Button press detected");
+            SDK_LOGGER("👆 Button press detected");
         }
 
         // ========================================================================
@@ -136,7 +137,7 @@ namespace CloudMouse::Hardware
             unsigned long pressDuration = currentTime - pressStartTime;
             lastPressDuration = pressDuration;
 
-            Serial.printf("👆 Button released after %lu ms\n", pressDuration);
+            SDK_LOGGER("👆 Button released after %lu ms\n", pressDuration);
 
             // Classify press event based on duration thresholds
             if (pressDuration >= ULTRA_LONG_PRESS_DURATION)
@@ -147,20 +148,20 @@ namespace CloudMouse::Hardware
                 {
                     ultraLongPressPending = true;
                     ultraLongPressNotified = true;
-                    Serial.println("👆🔒🔒 Ultra-long press event (on release)");
+                    SDK_LOGGER("👆🔒🔒 Ultra-long press event (on release)");
                 }
             }
             else if (pressDuration >= LONG_PRESS_DURATION)
             {
                 // Long press: 1000-2999ms
                 longPressPending = true;
-                Serial.println("👆🔒 Long press event");
+                SDK_LOGGER("👆🔒 Long press event");
             }
             else if (pressDuration < CLICK_TIMEOUT)
             {
                 // Short click: < 500ms
                 clickPending = true;
-                Serial.println("👆 Click event");
+                SDK_LOGGER("👆 Click event");
             }
             // Note: Press durations between 500-999ms are ignored (dead zone)
         }
@@ -179,7 +180,7 @@ namespace CloudMouse::Hardware
                 // Optional: Enable buzzer feedback for long press indication
                 // SimpleBuzzer::buzz();
                 longPressBuzzed = true;
-                Serial.println("🔊 Long press threshold reached (buzz disabled)");
+                SDK_LOGGER("🔊 Long press threshold reached (buzz disabled)");
             }
 
             // Ultra-long press immediate notification (don't wait for release)
@@ -187,7 +188,7 @@ namespace CloudMouse::Hardware
             {
                 ultraLongPressPending = true;
                 ultraLongPressNotified = true;
-                Serial.println("👆🔒🔒 Ultra-long press triggered immediately!");
+                SDK_LOGGER("👆🔒🔒 Ultra-long press triggered immediately!");
             }
         }
         else
@@ -217,7 +218,7 @@ namespace CloudMouse::Hardware
             movement = 0;            // Reset accumulator for next cycle
             movementPending = false; // Clear pending flag
 
-            Serial.printf("📊 Movement consumed: %d clicks\n", result);
+            SDK_LOGGER("📊 Movement consumed: %d clicks\n", result);
             return result;
         }
 
@@ -231,7 +232,7 @@ namespace CloudMouse::Hardware
         if (clickPending)
         {
             clickPending = false; // Reset flag after consumption
-            Serial.println("📊 Click event consumed");
+            SDK_LOGGER("📊 Click event consumed");
             return true;
         }
 
@@ -245,7 +246,7 @@ namespace CloudMouse::Hardware
         if (longPressPending)
         {
             longPressPending = false; // Reset flag after consumption
-            Serial.println("📊 Long press event consumed");
+            SDK_LOGGER("📊 Long press event consumed");
             return true;
         }
 
@@ -259,7 +260,7 @@ namespace CloudMouse::Hardware
         if (ultraLongPressPending)
         {
             ultraLongPressPending = false; // Reset flag after consumption
-            Serial.println("📊 Ultra-long press event consumed");
+            SDK_LOGGER("📊 Ultra-long press event consumed");
             return true;
         }
 
